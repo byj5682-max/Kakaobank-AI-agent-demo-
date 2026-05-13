@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Action Feed — 카카오뱅크 AI 액션 피드 프로토타입</title>
+  <style>
+    /* ════════════════════════════════════════
+       DESIGN TOKENS
+    ════════════════════════════════════════ */
+    :root {
+      --yellow:       #FEE500;
+      --yellow-hover: #F5DC00;
+      --on-yellow:    #191919;
+      --ai-bg:        #FFFBE6;
+      --ai-border:    #F5D700;
+      --gray-900:     #111111;
+      --gray-700:     #333333;
+      --gray-600:     #444444;
+      --gray-500:     #888888;
+      --gray-400:     #AAAAAA;
+      --gray-300:     #CCCCCC;
+      --gray-200:     #E0E0E0;
+      --gray-100:     #F0F0F0;
+      --gray-50:      #F7F7F7;
+      --white:        #FFFFFF;
+      --danger:       #E53935;
+      --warning:      #FB8C00;
+      --success:      #43A047;
+      --sp-xs:  4px;
+      --sp-sm:  8px;
+      --sp-md:  12px;
+      --sp-lg:  16px;
+      --sp-xl:  24px;
+      --r-sm:   8px;
+      --r-md:   12px;
+      --r-lg:   16px;
+    }
+
+    /* ════════════════════════════════════════
+       BASE
+    ════════════════════════════════════════ */
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: #1A1A2E;
+      background-image: radial-gradient(ellipse at 30% 20%, #16213E 0%, #0F3460 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      min-height: 100vh;
+    }
+
+    /* ════════════════════════════════════════
+       SCENE NAVIGATOR
+    ════════════════════════════════════════ */
+    .scene-nav {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 14px;
+      max-width: 620px;
+    }
+    .scene-nav button {
+      padding: 6px 13px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.08);
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      color: rgba(255,255,255,0.6);
+      transition: all 0.15s;
+      backdrop-filter: blur(4px);
+    }
+    .scene-nav button.active {
+      background: var(--yellow);
+      color: var(--on-yellow);
+      border-color: var(--yellow);
+      font-weight: 700;
+    }
+    .scene-nav button:hover:not(.active) {
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* ════════════════════════════════════════
+       PHONE SHELL
+    ════════════════════════════════════════ */
+    .phone {
+      width: 375px;
+      height: 780px;
+      background: var(--white);
+      border-radius: 44px;
+      overflow: hidden;
+      box-shadow:
+        0 40px 100px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(255,255,255,0.06),
+        inset 0 0 0 1px rgba(255,255,255,0.12);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Notch */
+    .phone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 28px;
+      background: var(--gray-900);
+      border-radius: 0 0 16px 16px;
+      z-index: 100;
+    }
+
+    /* ════════════════════════════════════════
+       SCENE SYSTEM — directional slide
+    ════════════════════════════════════════ */
+    .scene-wrapper {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scene {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      inset: 0;
+      background: var(--white);
+    }
+    .scene.active { display: flex; }
+
+    /* Forward: new scene slides in from right */
+    .scene.enter-forward {
+      animation: slideInRight 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+    @keyframes slideInRight {
+      from { transform: translateX(100%); }
+      to   { transform: translateX(0); }
+    }
+
+    /* Back: new scene slides in from left */
+    .scene.enter-back {
+      animation: slideInLeft 0.26s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+    @keyframes slideInLeft {
+      from { transform: translateX(-30%); opacity: 0.6; }
+      to   { transform: translateX(0); opacity: 1; }
+    }
+
+    /* STATUS BAR */
+    .status-bar {
+      height: 44px;
+      background: var(--white);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 0 22px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-900);
+      flex-shrink: 0;
+    }
+
+    /* NAV BAR */
+    .nav-bar {
+      height: 52px;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--sp-lg);
+      gap: var(--sp-sm);
+      flex-shrink: 0;
+    }
+    .nav-back {
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--gray-900);
+      line-height: 1;
+      padding: 8px 8px 8px 0;
+      transition: opacity 0.15s;
+    }
+    .nav-back:active { opacity: 0.4; }
+    .nav-title { font-size: 17px; font-weight: 700; color: var(--gray-900); }
+    .nav-tag   { margin-left: auto; font-size: 12px; color: var(--gray-500); }
+
+    /* SCROLLABLE CONTENT */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--sp-lg) var(--sp-lg) 28px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .content::-webkit-scrollbar { display: none; }
+
+    /* TAB BAR */
+    .tab-bar {
+      height: 60px;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: var(--white);
+      flex-shrink: 0;
+    }
+    .tab-item { text-align: center; font-size: 10px; color: var(--gray-300); }
+    .tab-item.on { color: var(--gray-900); }
+    .tab-icon  { font-size: 22px; margin-bottom: 2px; }
+
+    /* ════════════════════════════════════════
+       TYPOGRAPHY
+    ════════════════════════════════════════ */
+    .t-display { font-size: 32px; font-weight: 800; color: var(--gray-900); letter-spacing: -1px; }
+    .t-title-l { font-size: 22px; font-weight: 700; color: var(--gray-900); }
+    .t-title-m { font-size: 17px; font-weight: 700; color: var(--gray-900); }
+    .t-title-s { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+    .t-body-m  { font-size: 14px; font-weight: 400; color: var(--gray-700); line-height: 1.55; }
+    .t-body-s  { font-size: 13px; font-weight: 400; color: var(--gray-600); line-height: 1.6; }
+    .t-caption { font-size: 11px; font-weight: 400; color: var(--gray-500); line-height: 1.4; }
+
+    /* ════════════════════════════════════════
+       SECTION LABEL
+    ════════════════════════════════════════ */
+    .sec-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      margin: 20px 0 10px;
+      letter-spacing: 0.2px;
+    }
+
+    /* ════════════════════════════════════════
+       HOME · AI CARD
+    ════════════════════════════════════════ */
+    .home-ai-card {
+      background: var(--ai-bg);
+      border: 1.5px dashed var(--ai-border);
+      border-radius: var(--r-lg);
+      padding: 18px var(--sp-lg);
+      margin: var(--sp-md) 0;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+      position: relative;
+    }
+    .home-ai-card:hover {
+      box-shadow: 0 4px 20px rgba(254,229,0,0.25);
+    }
+    .home-ai-card:active { background: #FFF5C0; transform: scale(0.99); }
+    .home-ai-card .ai-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+    .home-ai-card .ai-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 5px;
+      line-height: 1.4;
+    }
+    .home-ai-card .ai-body {
+      font-size: 13px;
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .home-ai-card .ai-cta {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gray-900);
+      text-align: right;
+    }
+
+    /* ════════════════════════════════════════
+       ACCOUNT CARD
+    ════════════════════════════════════════ */
+    .acct-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      margin-bottom: var(--sp-md);
+    }
+    .acct-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px var(--sp-lg);
+      border-bottom: 1px solid var(--gray-50);
+    }
+    .acct-row:last-child { border-bottom: none; }
+    .acct-label { font-size: 14px; color: var(--gray-600); }
+    .acct-val   { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+
+    /* ════════════════════════════════════════
+       SUMMARY STRIP
+    ════════════════════════════════════════ */
+    .summary-strip {
+      background: var(--gray-50);
+      border-radius: var(--r-md);
+      padding: 16px var(--sp-lg);
+      margin-bottom: var(--sp-lg);
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+    .summary-row:last-child {
+      margin-bottom: 0;
+      border-top: 1px solid var(--gray-200);
+      padding-top: 9px;
+      margin-top: 4px;
+    }
+    .s-key { font-size: 13px; color: var(--gray-500); }
+    .s-val { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .s-val.big { font-size: 16px; font-weight: 800; }
+
+    /* ════════════════════════════════════════
+       BAR CHART — animated on enter
+    ════════════════════════════════════════ */
+    .chart-title { font-size: 13px; font-weight: 700; color: var(--gray-900); margin-bottom: 12px; }
+    .bar-row { display: flex; align-items: center; margin-bottom: 10px; gap: var(--sp-sm); }
+    .bar-lbl  { font-size: 12px; color: var(--gray-600); width: 58px; flex-shrink: 0; }
+    .bar-track {
+      flex: 1; height: 8px;
+      background: var(--gray-100);
+      border-radius: 4px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--gray-300);
+      border-radius: 4px;
+      width: 0;
+      transition: width 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .bar-fill.hot { background: var(--gray-900); }
+    .bar-fill.animated { /* target width set by JS */ }
+    .bar-amt   { font-size: 12px; color: var(--gray-700); width: 78px; text-align: right; flex-shrink: 0; }
+    .badge-up  { display: block; font-size: 10px; font-weight: 700; color: var(--danger); }
+
+    /* ════════════════════════════════════════
+       AI COMMENT BOX
+    ════════════════════════════════════════ */
+    .ai-comment {
+      background: var(--ai-bg);
+      border-left: 3px solid var(--ai-border);
+      border-radius: 0 var(--r-sm) var(--r-sm) 0;
+      padding: 13px 14px;
+      font-size: 13px;
+      color: var(--gray-700);
+      line-height: 1.65;
+      margin: 14px 0;
+    }
+
+    /* ════════════════════════════════════════
+       ACTION CARD (발견된 할일)
+    ════════════════════════════════════════ */
+    .action-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--r-md);
+      padding: 14px var(--sp-lg);
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+    }
+    .action-card:hover {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+    }
+    .action-card:active { background: var(--gray-50); transform: scale(0.99) translateY(0); }
+    .ac-icon  { font-size: 26px; flex-shrink: 0; }
+    .ac-body  { flex: 1; }
+    .ac-title { font-size: 14px; font-weight: 700; color: var(--gray-900); margin-bottom: 3px; }
+    .ac-sub   { font-size: 12px; color: var(--gray-500); }
+    .ac-arrow { font-size: 20px; color: var(--gray-300); }
+
+    /* ════════════════════════════════════════
+       BOTTOM BANNER
+    ════════════════════════════════════════ */
+    .bottom-banner {
+      background: var(--gray-50);
+      border-radius: var(--r-sm);
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--gray-500);
+      line-height: 1.55;
+      margin-top: var(--sp-sm);
+    }
+
+    /* ════════════════════════════════════════
+       CHECK LIST (지원금 자격) — staggered
+    ════════════════════════════════════════ */
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--gray-50);
+      opacity: 0;
+      transform: translateX(-16px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .check-item:last-child { border-bottom: none; }
+    .check-item.vis { opacity: 1; transform: translateX(0); }
+    .ci-icon { font-size: 24px; flex-shrink: 0; margin-top: 1px; }
+    .ci-main { font-size: 14px; font-weight: 700; color: var(--gray-900); margin-bottom: 3px; }
+    .ci-sub  { font-size: 12px; color: var(--gray-500); }
+
+    /* ════════════════════════════════════════
+       AMOUNT BOX
+    ════════════════════════════════════════ */
+    .amount-box {
+      background: var(--gray-50);
+      border-radius: 14px;
+      padding: 24px var(--sp-lg);
+      text-align: center;
+      margin: 20px 0;
+    }
+    .amt-label { font-size: 12px; color: var(--gray-500); margin-bottom: 8px; }
+    .amt-big   { font-size: 36px; font-weight: 800; color: var(--gray-900); letter-spacing: -1px; }
+    .amt-note  { font-size: 12px; color: var(--gray-500); margin-top: 8px; line-height: 1.55; }
+
+    /* ════════════════════════════════════════
+       INFO CARD
+    ════════════════════════════════════════ */
+    .info-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--r-md);
+      padding: 16px;
+      margin-bottom: var(--sp-md);
+    }
+    .info-card-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--gray-900); margin-bottom: 12px;
+    }
+    .info-row {
+      display: flex; gap: var(--sp-sm);
+      align-items: flex-start;
+      font-size: 13px; color: var(--gray-600);
+      margin-bottom: 8px; line-height: 1.5;
+    }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-row em { font-style: normal; font-weight: 700; color: var(--gray-900); }
+
+    /* ════════════════════════════════════════
+       BUTTONS
+    ════════════════════════════════════════ */
+    .btn-primary {
+      display: block; width: 100%;
+      padding: 16px;
+      background: var(--yellow);
+      color: var(--on-yellow);
+      border: none; border-radius: var(--r-md);
+      font-size: 15px; font-weight: 700;
+      font-family: inherit;
+      text-align: center; cursor: pointer;
+      margin: 16px 0 8px;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+      box-shadow: 0 2px 10px rgba(254,229,0,0.3);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 4px 18px rgba(254,229,0,0.45);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active { background: var(--yellow-hover); transform: scale(0.99) translateY(0); box-shadow: none; }
+
+    .btn-secondary {
+      display: block; width: 100%;
+      padding: 15px;
+      background: var(--white);
+      color: var(--gray-600);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--r-md);
+      font-size: 14px; font-weight: 600;
+      font-family: inherit;
+      text-align: center; cursor: pointer;
+      margin: 6px 0;
+      transition: background 0.15s;
+    }
+    .btn-secondary:active { background: var(--gray-50); }
+
+    /* ════════════════════════════════════════
+       CONFIRM BOX (지원금 알림 설정 후)
+    ════════════════════════════════════════ */
+    .confirm-box {
+      background: #F0FFF4;
+      border: 1px solid #A5D6A7;
+      border-radius: var(--r-md);
+      padding: 16px;
+      text-align: center;
+      font-size: 13px;
+      color: #2E7D32;
+      line-height: 1.65;
+      margin-top: 12px;
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ════════════════════════════════════════
+       CHALLENGE HEADER
+    ════════════════════════════════════════ */
+    .chal-header {
+      background: var(--gray-50);
+      border-radius: 14px;
+      padding: 18px var(--sp-lg);
+      margin-bottom: 14px;
+    }
+    .chal-title { font-size: 14px; font-weight: 700; color: var(--gray-900); margin-bottom: 14px; }
+    .chal-nums  { display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .chal-num   { text-align: center; }
+    .chal-num-val { font-size: 18px; font-weight: 800; color: var(--gray-900); }
+    .chal-num-val.danger  { color: var(--danger); }
+    .chal-num-val.warning { color: var(--warning); }
+    .chal-num-lab { font-size: 10px; color: var(--gray-500); margin-top: 3px; }
+
+    .prog-track {
+      height: 10px;
+      background: var(--gray-200);
+      border-radius: 5px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: var(--gray-900);
+      border-radius: 5px;
+      width: 0;
+      transition: width 0.9s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .prog-note { font-size: 11px; color: var(--gray-500); text-align: right; margin-top: 5px; }
+
+    /* ════════════════════════════════════════
+       TIMELINE — staggered entrance
+    ════════════════════════════════════════ */
+    .tl-title { font-size: 13px; font-weight: 700; color: var(--gray-900); margin-bottom: 14px; }
+    .timeline  { position: relative; padding-left: 22px; margin-bottom: var(--sp-lg); }
+    .timeline::before {
+      content: ''; position: absolute;
+      left: 7px; top: 8px; bottom: 8px;
+      width: 2px; background: var(--gray-200); border-radius: 1px;
+    }
+    .tl-item {
+      position: relative;
+      margin-bottom: 16px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .tl-item:last-child { margin-bottom: 0; }
+    .tl-item.vis { opacity: 1; transform: translateY(0); }
+    .tl-dot {
+      position: absolute; left: -18px; top: 5px;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--gray-300);
+      border: 2px solid var(--white);
+      box-shadow: 0 0 0 2px var(--gray-300);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .tl-dot.warning { background: var(--warning); box-shadow: 0 0 0 2px var(--warning); }
+    .tl-dot.danger  { background: var(--danger);  box-shadow: 0 0 0 2px var(--danger); }
+    .tl-date { font-size: 11px; color: var(--gray-500); margin-bottom: 3px; }
+    .tl-body { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+    .tl-text { font-size: 13px; color: var(--gray-700); line-height: 1.45; flex: 1; }
+    .tl-amount         { font-size: 13px; font-weight: 700; color: var(--gray-900); white-space: nowrap; }
+    .tl-amount.warning { color: var(--warning); }
+    .tl-amount.danger  { color: var(--danger); }
+
+    /* ════════════════════════════════════════
+       SUCCESS SCREEN + CONFETTI
+    ════════════════════════════════════════ */
+    .success-header { text-align: center; padding: 28px var(--sp-lg) 20px; position: relative; }
+    .suc-emoji {
+      font-size: 60px;
+      margin-bottom: 12px;
+      display: block;
+      animation: bounceIn 0.6s cubic-bezier(0.68,-0.55,0.27,1.55);
+    }
+    @keyframes bounceIn {
+      0%   { transform: scale(0.3); opacity: 0; }
+      60%  { transform: scale(1.12); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .suc-title {
+      font-size: 26px; font-weight: 800; color: var(--gray-900); margin-bottom: 5px;
+      opacity: 0;
+    }
+    .suc-title.anim { animation: fadeIn 0.4s ease 0.3s forwards; }
+    .suc-sub   {
+      font-size: 14px; color: var(--gray-500);
+      opacity: 0;
+    }
+    .suc-sub.anim { animation: fadeIn 0.4s ease 0.5s forwards; }
+
+    .savings-table { border-top: 1px solid var(--gray-200); margin: 12px 0; }
+    .sav-row {
+      display: flex; justify-content: space-between;
+      padding: 11px 0; border-bottom: 1px solid var(--gray-50);
+      font-size: 14px;
+    }
+    .sav-row.total {
+      border-bottom: none; border-top: 1.5px solid var(--gray-200);
+      padding-top: 13px; margin-top: 4px;
+      font-weight: 800; font-size: 16px;
+    }
+    .sav-key { color: var(--gray-500); }
+    .sav-val { color: var(--gray-900); font-weight: 600; }
+
+    /* Confetti particles */
+    .confetti-wrap {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 160px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      opacity: 0;
+    }
+    .confetti-piece.run {
+      animation: confettiFall 1.4s ease forwards;
+    }
+    @keyframes confettiFall {
+      0%   { opacity: 1; transform: translateY(-20px) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(160px) rotate(360deg); }
+    }
+
+    /* ════════════════════════════════════════
+       QUICK MENU (홈)
+    ════════════════════════════════════════ */
+    .quick-menu {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: var(--sp-sm);
+    }
+    .qm-item { text-align: center; }
+    .qm-icon {
+      width: 52px; height: 52px;
+      background: var(--gray-50);
+      border-radius: 14px;
+      margin: 0 auto 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      transition: background 0.15s, transform 0.12s;
+    }
+    .qm-icon:active { background: var(--gray-100); transform: scale(0.95); }
+    .qm-label { font-size: 11px; color: var(--gray-600); }
+
+    /* ════════════════════════════════════════
+       DIVIDER
+    ════════════════════════════════════════ */
+    .divider { height: 1px; background: var(--gray-100); margin: 14px 0; }
+
+    /* ════════════════════════════════════════
+       DEMO PROGRESS INDICATOR
+    ════════════════════════════════════════ */
+    .demo-progress {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .dp-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      transition: all 0.25s;
+    }
+    .dp-dot.active {
+      width: 20px;
+      border-radius: 3px;
+      background: var(--yellow);
+    }
+    .dp-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.45);
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* ════════════════════════════════════════
+       TOAST
+    ════════════════════════════════════════ */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: rgba(25,25,25,0.9); color: var(--white);
+      padding: 11px 22px; border-radius: 24px;
+      font-size: 13px; font-weight: 600;
+      opacity: 0; transition: opacity 0.28s;
+      z-index: 9999; white-space: nowrap; pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- SCENE NAVIGATOR -->
+<div class="scene-nav">
+  <button id="nav-0" class="active" onclick="goTo(0)">① 홈</button>
+  <button id="nav-1" onclick="goTo(1)">② AI 액션</button>
+  <button id="nav-2" onclick="goTo(2)">③ 생활 혜택</button>
+  <button id="nav-3" onclick="goTo(3)">④ 챌린지 설정</button>
+  <button id="nav-4" onclick="goTo(4)">⑤ 트래킹</button>
+  <button id="nav-5" onclick="goTo(5)">⑥ 성공 🎉</button>
+</div>
+
+<!-- PHONE -->
+<div class="phone">
+  <div class="scene-wrapper">
+
+    <!-- ═══════════════════════════════════
+         SCENE 0 · 홈
+    ═══════════════════════════════════ -->
+    <div class="scene active" id="scene-0" data-idx="0">
+      <div class="status-bar">
+        <span>9:41</span><span style="font-size:15px; letter-spacing:2px">●●●</span>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px 8px;">
+        <span class="t-title-m">카카오뱅크</span>
+        <div style="display:flex; gap:16px; font-size:21px;">🔔 ⚙️</div>
+      </div>
+
+      <div class="content">
+
+        <!-- AI 카드 -->
+        <div class="home-ai-card" onclick="goTo(1)">
+          <div class="ai-tag">🌟 AI 액션</div>
+          <div class="ai-title">지영님, 오늘 챙길<br>금융 액션이 있어요.</div>
+          <div class="ai-body">지출 흐름 확인하시고,<br>필요한 할 일 챙겨보세요.</div>
+          <div class="ai-cta">액션 보기 →</div>
+        </div>
+
+        <!-- 내 계좌 -->
+        <div class="sec-label">내 계좌</div>
+        <div class="acct-card">
+          <div class="acct-row">
+            <span class="acct-label">보통예금</span>
+            <span class="acct-val">2,143,200원</span>
+          </div>
+          <div class="acct-row">
+            <span class="acct-label">저금통</span>
+            <span class="acct-val">385,000원</span>
+          </div>
+          <div class="acct-row">
+            <span class="acct-label">모임통장 (동창)</span>
+            <span class="acct-val">320,000원</span>
+          </div>
+        </div>
+
+        <!-- 빠른 메뉴 -->
+        <div class="sec-label">빠른 메뉴</div>
+        <div class="quick-menu">
+          <div class="qm-item"><div class="qm-icon">💸</div><div class="qm-label">이체</div></div>
+          <div class="qm-item"><div class="qm-icon">💳</div><div class="qm-label">카드</div></div>
+          <div class="qm-item"><div class="qm-icon">📊</div><div class="qm-label">소비</div></div>
+          <div class="qm-item"><div class="qm-icon">🏦</div><div class="qm-label">상품</div></div>
+        </div>
+
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item on"><div class="tab-icon">🏠</div>홈</div>
+        <div class="tab-item"><div class="tab-icon">💳</div>카드</div>
+        <div class="tab-item"><div class="tab-icon">💰</div>대출</div>
+        <div class="tab-item"><div class="tab-icon">👤</div>MY</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         SCENE 1 · AI 액션
+    ═══════════════════════════════════ -->
+    <div class="scene" id="scene-1" data-idx="1">
+      <div class="status-bar"><span>9:42</span><span style="font-size:15px;letter-spacing:2px">●●●</span></div>
+      <div class="nav-bar">
+        <span class="nav-back" onclick="goTo(0)">←</span>
+        <span class="nav-title">AI 액션</span>
+        <span class="nav-tag">2026.04</span>
+      </div>
+
+      <div class="content">
+
+        <div class="summary-strip">
+          <div class="summary-row">
+            <span class="s-key">이번 달 수입</span>
+            <span class="s-val">6,270,000원</span>
+          </div>
+          <div class="summary-row">
+            <span class="s-key">이번 달 지출</span>
+            <span class="s-val">4,080,000원</span>
+          </div>
+          <div class="summary-row">
+            <span class="s-key">이번 달 여유</span>
+            <span class="s-val big">2,190,000원</span>
+          </div>
+        </div>
+
+        <div class="chart-title">카테고리별 지출</div>
+
+        <!-- data-w = target width % -->
+        <div class="bar-row">
+          <span class="bar-lbl">주거비</span>
+          <div class="bar-track"><div class="bar-fill" data-w="100"></div></div>
+          <span class="bar-amt">1,200,000</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-lbl">교육비</span>
+          <div class="bar-track"><div class="bar-fill" data-w="57"></div></div>
+          <span class="bar-amt">680,000</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-lbl">외식비 ⚠️</span>
+          <div class="bar-track"><div class="bar-fill hot" data-w="48"></div></div>
+          <span class="bar-amt" style="color:var(--danger)">580,000<span class="badge-up">↑+30만</span></span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-lbl">식비</span>
+          <div class="bar-track"><div class="bar-fill" data-w="40"></div></div>
+          <span class="bar-amt">480,000</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-lbl">보험</span>
+          <div class="bar-track"><div class="bar-fill" data-w="27"></div></div>
+          <span class="bar-amt">320,000</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-lbl">교통비</span>
+          <div class="bar-track"><div class="bar-fill" data-w="17"></div></div>
+          <span class="bar-amt">210,000</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="ai-comment">
+          4월 외식비가 30만원 더 나왔어요. 어린이날 앞두고 모임이 많았던 것 같아요.<br>
+          지영님 데이터에서 지금 실행할 수 있는 액션 2개를 찾았어요.
+        </div>
+
+        <div class="t-title-s" style="margin:14px 0 10px;">📌 발견된 액션</div>
+
+        <div class="action-card" onclick="goTo(2)">
+          <span class="ac-icon">💰</span>
+          <div class="ac-body">
+            <div class="ac-title">고유가 피해지원금 신청하기</div>
+            <div class="ac-sub">최대 60만원 · 5/18 신청 시작 · 데모 예시</div>
+          </div>
+          <span class="ac-arrow">›</span>
+        </div>
+
+        <div class="action-card" onclick="goTo(3)">
+          <span class="ac-icon">🍽️</span>
+          <div class="ac-body">
+            <div class="ac-title">외식비 챌린지 시작하기</div>
+            <div class="ac-sub">지난 달 +30만원 ↑ · 목표 30만원 설정</div>
+          </div>
+          <span class="ac-arrow">›</span>
+        </div>
+
+        <div class="bottom-banner">
+          💡 자녀장려금 등 5월 생활 혜택도 AI가 알아서 챙겨드려요.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         SCENE 2 · 생활 혜택 알림
+    ═══════════════════════════════════ -->
+    <div class="scene" id="scene-2" data-idx="2">
+      <div class="status-bar"><span>9:43</span><span style="font-size:15px;letter-spacing:2px">●●●</span></div>
+      <div class="nav-bar">
+        <span class="nav-back" onclick="goTo(1)">←</span>
+        <span class="nav-title">고유가 피해지원금</span>
+        <span class="nav-tag" style="font-size:10px; color:var(--gray-400);">데모 예시</span>
+      </div>
+
+      <div class="content">
+
+        <p class="t-body-m" style="margin-bottom:16px;">지영님 데이터로 수령 조건을 자동으로 확인해봤어요.</p>
+
+        <div class="check-item" id="ck1">
+          <span class="ci-icon">✅</span>
+          <div><div class="ci-main">소득 하위 70%</div><div class="ci-sub">4인 가구 건강보험료 기준 충족</div></div>
+        </div>
+        <div class="check-item" id="ck2">
+          <span class="ci-icon">✅</span>
+          <div><div class="ci-main">4인 가구</div><div class="ci-sub">지영님 · 민준님 · 수아 · 준호</div></div>
+        </div>
+        <div class="check-item" id="ck3">
+          <span class="ci-icon">✅</span>
+          <div><div class="ci-main">비수도권 거주</div><div class="ci-sub">충청남도 천안시</div></div>
+        </div>
+
+        <div class="amount-box">
+          <div class="amt-label">예상 수령 혜택금액</div>
+          <div class="amt-big">60만원</div>
+          <div class="amt-note">1인당 15만원 × 4명<br>(소득하위 70% · 비수도권 · 예시 조건)</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title">📅 신청 일정 (데모 예시 기준)</div>
+          <div class="info-row">🗓️ <span>신청 기간: <em>2026.5.18(월) ~ 7.3(금)</em></span></div>
+          <div class="info-row">💳 <span>지급수단: 카드 · 지역사랑상품권 중 선택</span></div>
+          <div class="info-row">📍 <span>사용처: 천안시 소상공인 매장</span></div>
+          <div class="info-row">⏰ <span>사용기한: <em>2026.8.31까지</em></span></div>
+        </div>
+
+        <div class="ai-comment">
+          조건 세 가지 모두 충족이에요! 🎉<br>
+          5월 18일 신청 시작에 맞춰 알림을 보내드릴게요.
+        </div>
+
+        <button class="btn-primary" id="subsidy-btn" onclick="setSubsidyAlert(this)">🔔 알림 받기 (5/18 신청 시작)</button>
+        <div style="text-align:center; margin-top:4px;" class="t-caption">※ 데모용 예시 흐름입니다</div>
+
+        <div class="confirm-box" id="subsidy-confirm">
+          ✅ 알림 설정 완료!<br>
+          5월 18일 오전에 신청 안내 드릴게요.<br>
+          신청 후 카뱅 카드로 바로 사용 가능해요.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         SCENE 3 · 챌린지 설정
+    ═══════════════════════════════════ -->
+    <div class="scene" id="scene-3" data-idx="3">
+      <div class="status-bar"><span>9:44</span><span style="font-size:15px;letter-spacing:2px">●●●</span></div>
+      <div class="nav-bar">
+        <span class="nav-back" onclick="goTo(1)">←</span>
+        <span class="nav-title">외식비 챌린지</span>
+      </div>
+
+      <div class="content">
+
+        <div class="acct-card">
+          <div class="acct-row">
+            <span class="acct-label">4월 외식비</span>
+            <span class="acct-val" style="color:var(--danger)">580,000원 ↑</span>
+          </div>
+          <div class="acct-row">
+            <span class="acct-label">3월 외식비</span>
+            <span class="acct-val">280,000원</span>
+          </div>
+          <div class="acct-row">
+            <span class="acct-label">차이</span>
+            <span class="acct-val" style="color:var(--danger)">+300,000원</span>
+          </div>
+        </div>
+
+        <div class="amount-box">
+          <div class="amt-label">5월 챌린지 목표</div>
+          <div class="amt-big">30만원</div>
+          <div class="amt-note">AI 추천 · 지난 달 절반 수준</div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-title">🎁 달성하면?</div>
+          <div class="info-row">💰 <span>카뱅 축하금 <em>1,000원</em></span></div>
+          <div class="info-row">🐷 <span>저금통 자동 입금 (절약 차액 포함)</span></div>
+          <div class="info-row">📊 <span>절약한 만큼 다음 달 목표에 반영돼요</span></div>
+        </div>
+
+        <button class="btn-primary" onclick="goTo(4)">참여할게요! 💪</button>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         SCENE 4 · 챌린지 트래킹
+    ═══════════════════════════════════ -->
+    <div class="scene" id="scene-4" data-idx="4">
+      <div class="status-bar"><span>5월 진행 중</span><span style="font-size:15px;letter-spacing:2px">●●●</span></div>
+      <div class="nav-bar">
+        <span class="nav-back" onclick="goTo(3)">←</span>
+        <span class="nav-title">외식비 챌린지 진행 중</span>
+      </div>
+
+      <div class="content">
+
+        <div class="chal-header">
+          <div class="chal-title">5월 외식비 챌린지</div>
+          <div class="chal-nums">
+            <div class="chal-num">
+              <div class="chal-num-val">250,000</div>
+              <div class="chal-num-lab">사용 (원)</div>
+            </div>
+            <div class="chal-num">
+              <div class="chal-num-val">300,000</div>
+              <div class="chal-num-lab">목표 (원)</div>
+            </div>
+            <div class="chal-num">
+              <div class="chal-num-val danger" id="remain-val">50,000</div>
+              <div class="chal-num-lab">남은 한도</div>
+            </div>
+          </div>
+          <div class="prog-track">
+            <div class="prog-fill" id="prog-fill"></div>
+          </div>
+          <div class="prog-note" id="prog-note">83% 소진 — 마지막 스퍼트!</div>
+        </div>
+
+        <div class="tl-title">이번 달 흐름</div>
+        <div class="timeline">
+
+          <div class="tl-item" id="tl0">
+            <div class="tl-dot"></div>
+            <div class="tl-date">5월 3일</div>
+            <div class="tl-body">
+              <span class="tl-text">🍽️ 좋은 출발이에요!</span>
+              <span class="tl-amount">잔액 288,000원</span>
+            </div>
+          </div>
+
+          <div class="tl-item" id="tl1">
+            <div class="tl-dot"></div>
+            <div class="tl-date">5월 8일</div>
+            <div class="tl-body">
+              <span class="tl-text">🍽️ 어버이날 외식, 68,000원 사용했어요.</span>
+              <span class="tl-amount">잔액 220,000원</span>
+            </div>
+          </div>
+
+          <div class="tl-item" id="tl2">
+            <div class="tl-dot warning"></div>
+            <div class="tl-date">5월 14일 · 주의</div>
+            <div class="tl-body">
+              <span class="tl-text">⚠️ 절반 넘게 썼어요. 속도 조절이 필요해요.</span>
+              <span class="tl-amount warning">잔액 132,000원</span>
+            </div>
+          </div>
+
+          <div class="tl-item" id="tl3">
+            <div class="tl-dot danger"></div>
+            <div class="tl-date">5월 26일 · 위험</div>
+            <div class="tl-body">
+              <span class="tl-text">🚨 집밥으로 버텨요! 5일 남았어요.</span>
+              <span class="tl-amount danger">잔액 73,000원</span>
+            </div>
+          </div>
+
+          <div class="tl-item" id="tl4">
+            <div class="tl-dot"></div>
+            <div class="tl-date">5월 30일</div>
+            <div class="tl-body">
+              <span class="tl-text">🍜 분식집 아이들 저녁, 23,000원 사용.</span>
+              <span class="tl-amount">잔액 50,000원</span>
+            </div>
+          </div>
+
+        </div>
+
+        <button class="btn-primary" onclick="goTo(5)">5/31 챌린지 결과 보기 →</button>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         SCENE 5 · 챌린지 성공
+    ═══════════════════════════════════ -->
+    <div class="scene" id="scene-5" data-idx="5">
+      <div class="status-bar"><span>5월 31일</span><span style="font-size:15px;letter-spacing:2px">●●●</span></div>
+      <div class="nav-bar">
+        <span class="nav-back" onclick="goTo(4)">←</span>
+        <span class="nav-title">챌린지 완료</span>
+      </div>
+
+      <div class="content">
+
+        <div class="success-header">
+          <!-- Confetti -->
+          <div class="confetti-wrap" id="confetti-wrap"></div>
+          <span class="suc-emoji" id="suc-emoji">🎉</span>
+          <div class="suc-title">챌린지 성공!</div>
+          <div class="suc-sub">지영님, 정말 잘 버텨내셨어요.</div>
+        </div>
+
+        <div class="acct-card">
+          <div class="acct-row">
+            <span class="acct-label">5월 외식비</span>
+            <span class="acct-val">250,000원</span>
+          </div>
+          <div class="acct-row">
+            <span class="acct-label">목표</span>
+            <span class="acct-val">300,000원</span>
+          </div>
+          <div class="acct-row">
+            <span class="acct-label" style="font-weight:700;">절약한 금액</span>
+            <span class="acct-val" style="font-size:16px; font-weight:800; color:var(--success);">50,000원</span>
+          </div>
+        </div>
+
+        <div class="info-card" style="border-color:var(--gray-200);">
+          <div class="info-card-title">🐷 저금통에 들어가는 금액</div>
+          <div class="savings-table">
+            <div class="sav-row">
+              <span class="sav-key">절약 차액</span>
+              <span class="sav-val">50,000원</span>
+            </div>
+            <div class="sav-row">
+              <span class="sav-key">카뱅 축하금</span>
+              <span class="sav-val">1,000원</span>
+            </div>
+            <div class="sav-row total">
+              <span class="sav-key">합계</span>
+              <span class="sav-val" style="color:var(--success);">51,000원</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-comment">
+          🎉 지영님이 절약한 50,000원 + 카뱅 축하금 1,000원, 합쳐서 <strong>51,000원</strong>을 저금통에 넣어뒀어요. 수고하셨어요!
+        </div>
+
+        <button class="btn-primary" onclick="goTo(0)">저금통으로 바로 이동 🐷</button>
+        <button class="btn-secondary" onclick="goTo(0)">홈으로 돌아가기</button>
+
+        <div style="text-align:center; padding:14px 0 4px;" class="t-caption">
+          수고하셨어요, 지영님! 🌸 다음 달도 함께해요.
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /scene-wrapper -->
+</div><!-- /phone -->
+
+<!-- Demo progress dots -->
+<div class="demo-progress" id="demo-dots"></div>
+<div class="dp-label" id="demo-label">Scene 1 · 홈 화면</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ══════════════════════════════════════
+     CONFIG
+  ══════════════════════════════════════ */
+  const SCENES = [
+    { label: 'Scene 1 · 홈 — AI 액션 카드', hint: '≈5초' },
+    { label: 'Scene 2 · AI 액션 피드', hint: '≈15초' },
+    { label: 'Scene 3-A · 생활 혜택 알림 (예시)', hint: '≈20초' },
+    { label: 'Scene 3-B · 챌린지 설정', hint: '≈5초' },
+    { label: 'Scene 3-B · 트래킹', hint: '≈15초' },
+    { label: 'Scene 3-B · 성공 🎉', hint: '≈5초' },
+  ];
+
+  let currentIdx = 0;
+
+  /* Confetti colors */
+  const CONFETTI_COLORS = ['#FEE500','#43A047','#1E88E5','#E53935','#FB8C00','#9C27B0'];
+
+  /* ══════════════════════════════════════
+     BUILD DOTS
+  ══════════════════════════════════════ */
+  const dotsEl = document.getElementById('demo-dots');
+  SCENES.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dp-dot' + (i === 0 ? ' active' : '');
+    d.id = 'dot-' + i;
+    d.onclick = () => goTo(i);
+    d.style.cursor = 'pointer';
+    dotsEl.appendChild(d);
+  });
+
+  /* ══════════════════════════════════════
+     NAVIGATION
+  ══════════════════════════════════════ */
+  function goTo(idx) {
+    if (idx === currentIdx) return;
+    const direction = idx > currentIdx ? 'forward' : 'back';
+    const oldScene = document.getElementById('scene-' + currentIdx);
+    const newScene = document.getElementById('scene-' + idx);
+
+    // Remove any existing animation classes
+    newScene.classList.remove('enter-forward', 'enter-back');
+
+    // Hide old scene
+    oldScene.classList.remove('active');
+
+    // Show and animate new scene
+    newScene.classList.add('active');
+    void newScene.offsetWidth; // force reflow
+    newScene.classList.add(direction === 'forward' ? 'enter-forward' : 'enter-back');
+
+    // Clean animation class after done
+    newScene.addEventListener('animationend', () => {
+      newScene.classList.remove('enter-forward', 'enter-back');
+    }, { once: true });
+
+    // Update nav buttons
+    document.querySelectorAll('.scene-nav button').forEach((b, i) => {
+      b.classList.toggle('active', i === idx);
+    });
+
+    // Update dots
+    document.querySelectorAll('.dp-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === idx);
+    });
+
+    // Update label
+    const s = SCENES[idx];
+    document.getElementById('demo-label').textContent = s.label + '  (' + s.hint + ')';
+
+    // Scroll to top
+    const c = newScene.querySelector('.content');
+    if (c) c.scrollTop = 0;
+
+    currentIdx = idx;
+
+    // Scene-specific triggers
+    triggerSceneEffects(idx);
+  }
+
+  /* ══════════════════════════════════════
+     SCENE EFFECTS
+  ══════════════════════════════════════ */
+  function triggerSceneEffects(idx) {
+    if (idx === 1) animateBars();
+    if (idx === 2) animateChecklist();
+    if (idx === 4) animateTracking();
+    if (idx === 5) animateSuccess();
+  }
+
+  /* Scene 1: Bar chart animation */
+  function animateBars() {
+    const fills = document.querySelectorAll('#scene-1 .bar-fill');
+    // 즉시 transition 끄고 width=0 리셋 → 리플로우 후 transition 켜고 animate
+    fills.forEach(f => {
+      f.style.transition = 'none';
+      f.style.width = '0';
+    });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        fills.forEach((f, i) => {
+          f.style.transition = 'width 0.7s cubic-bezier(0.25,0.46,0.45,0.94)';
+          setTimeout(() => {
+            f.style.width = f.dataset.w + '%';
+          }, i * 90);
+        });
+      });
+    });
+  }
+
+  /* Scene 2: Checklist stagger */
+  function animateChecklist() {
+    ['ck1','ck2','ck3'].forEach(id => document.getElementById(id).classList.remove('vis'));
+
+    // confirm-box: 알림 설정 완료 상태는 유지하되, 화면 재진입 시 confirm도 함께 노출 유지
+    // (이미 클릭한 경우 → 확인박스 보이는 채로 유지, 버튼만 완료 상태 유지)
+    // 아직 클릭 안 한 경우 → 완전 초기화
+    const btn     = document.getElementById('subsidy-btn');
+    const confirm = document.getElementById('subsidy-confirm');
+    if (!btn.disabled) {
+      btn.textContent  = '🔔 신청 알림 받기 (5/18)';
+      btn.style.background = '';
+      btn.style.color  = '';
+      btn.style.boxShadow  = '';
+      confirm.style.display = 'none';
+    }
+
+    setTimeout(() => document.getElementById('ck1').classList.add('vis'), 260);
+    setTimeout(() => document.getElementById('ck2').classList.add('vis'), 580);
+    setTimeout(() => document.getElementById('ck3').classList.add('vis'), 900);
+  }
+
+  /* Scene 4: Timeline + progress bar */
+  function animateTracking() {
+    // Reset
+    for (let i = 0; i < 5; i++) {
+      document.getElementById('tl' + i).classList.remove('vis');
+    }
+    const fill = document.getElementById('prog-fill');
+    fill.style.width = '0';
+
+    // Animate progress bar
+    setTimeout(() => { fill.style.width = '83%'; }, 200);
+
+    // Animate timeline items
+    [0,1,2,3,4].forEach(i => {
+      setTimeout(() => {
+        document.getElementById('tl' + i).classList.add('vis');
+      }, 300 + i * 220);
+    });
+  }
+
+  /* Scene 5: Success confetti */
+  function animateSuccess() {
+    const wrap = document.getElementById('confetti-wrap');
+    wrap.innerHTML = '';
+
+    // Re-trigger emoji bounce
+    const emoji = document.getElementById('suc-emoji');
+    emoji.style.animation = 'none';
+    void emoji.offsetWidth;
+    emoji.style.animation = 'bounceIn 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
+
+    // Re-trigger title / sub fade-in on every visit
+    const title = document.querySelector('.suc-title');
+    const sub   = document.querySelector('.suc-sub');
+    [title, sub].forEach(el => {
+      el.classList.remove('anim');
+      el.style.opacity = '0';
+      void el.offsetWidth; // force reflow
+      el.classList.add('anim');
+    });
+
+    const count = 28;
+    for (let i = 0; i < count; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.top = '0';
+      p.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      p.style.width = (Math.random() * 7 + 5) + 'px';
+      p.style.height = (Math.random() * 7 + 5) + 'px';
+      p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      p.style.animationDelay = (Math.random() * 0.6) + 's';
+      p.style.animationDuration = (Math.random() * 0.6 + 1.1) + 's';
+      wrap.appendChild(p);
+      // start
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { p.classList.add('run'); });
+      });
+    }
+  }
+
+  /* ══════════════════════════════════════
+     SUBSIDY ALERT BUTTON
+  ══════════════════════════════════════ */
+  function setSubsidyAlert(btn) {
+    btn.textContent = '✅ 알림 설정 완료';
+    btn.style.background = '#E8F5E9';
+    btn.style.color = '#2E7D32';
+    btn.style.boxShadow = 'none';
+    btn.disabled = true;
+    document.getElementById('subsidy-confirm').style.display = 'block';
+    showToast('🔔 5/18 알림 설정 완료!');
+  }
+
+  /* ══════════════════════════════════════
+     TOAST
+  ══════════════════════════════════════ */
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  /* ══════════════════════════════════════
+     INIT
+  ══════════════════════════════════════ */
+  document.getElementById('demo-label').textContent = SCENES[0].label + '  (' + SCENES[0].hint + ')';
+</script>
+</body>
+</html>
