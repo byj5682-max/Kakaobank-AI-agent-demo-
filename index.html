@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Action Feed — 카카오뱅크 AI 액션 피드 기획 포트폴리오</title>
+  <style>
+    :root {
+      --yellow: #FEE500;
+      --on-yellow: #191919;
+      --gray-900: #111111;
+      --gray-700: #333333;
+      --gray-500: #888888;
+      --gray-200: #E0E0E0;
+      --gray-50: #F7F7F7;
+      --ai-bg: #FFFBE6;
+      --ai-border: #F5D700;
+      --success: #43A047;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #0F1117;
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1A1A2E 0%, #16213E 60%, #0F3460 100%);
+      padding: 64px 24px 52px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(254,229,0,0.12) 0%, transparent 70%);
+      top: -100px; left: 50%; transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(254,229,0,0.12);
+      border: 1px solid rgba(254,229,0,0.3);
+      color: var(--yellow);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.3;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 span { color: var(--yellow); }
+    .hero-sub {
+      font-size: 15px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+      max-width: 480px;
+      margin: 0 auto 32px;
+    }
+    .hero-thesis {
+      display: inline-block;
+      background: var(--yellow);
+      color: var(--on-yellow);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 10px;
+      letter-spacing: 0.2px;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+
+    /* ── DEMO CTA ── */
+    .demo-cta {
+      background: var(--yellow);
+      border-radius: 18px;
+      padding: 28px 28px 24px;
+      margin: -24px 0 32px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 8px 32px rgba(254,229,0,0.25);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .demo-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(254,229,0,0.35); }
+    .demo-cta:active { transform: scale(0.99); }
+    .demo-cta-icon { font-size: 44px; flex-shrink: 0; }
+    .demo-cta-body { flex: 1; }
+    .demo-cta-label { font-size: 11px; font-weight: 700; color: rgba(25,25,25,0.5); margin-bottom: 4px; letter-spacing: 0.4px; }
+    .demo-cta-title { font-size: 20px; font-weight: 800; color: var(--on-yellow); margin-bottom: 3px; }
+    .demo-cta-sub { font-size: 13px; color: rgba(25,25,25,0.6); }
+    .demo-cta-arrow { font-size: 26px; color: rgba(25,25,25,0.4); flex-shrink: 0; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin: 36px 0 14px;
+    }
+
+    /* ── DELIVERABLE CARDS ── */
+    .deliverable-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 540px) { .deliverable-grid { grid-template-columns: 1fr; } }
+
+    .del-card {
+      background: #1C1F2B;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 18px 18px 14px;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.15s, transform 0.15s, background 0.15s;
+    }
+    .del-card:hover {
+      border-color: rgba(254,229,0,0.3);
+      background: #21253A;
+      transform: translateY(-2px);
+    }
+    .del-card.full { grid-column: 1 / -1; }
+
+    .del-num {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 0.5px;
+    }
+    .del-icon { font-size: 26px; }
+    .del-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.4;
+    }
+    .del-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.5;
+    }
+    .del-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(254,229,0,0.12);
+      color: var(--yellow);
+      border: 1px solid rgba(254,229,0,0.2);
+      margin-top: 2px;
+      align-self: flex-start;
+    }
+    .del-badge.green {
+      background: rgba(67,160,71,0.12);
+      color: #69BB6C;
+      border-color: rgba(67,160,71,0.2);
+    }
+
+    /* ── SCENARIO SUMMARY ── */
+    .scenario-box {
+      background: #1C1F2B;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 10px;
+    }
+    .scenario-box h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 14px;
+    }
+    .scene-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .scene-row:last-child { margin-bottom: 0; }
+    .scene-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: rgba(254,229,0,0.12);
+      border: 1px solid rgba(254,229,0,0.25);
+      color: var(--yellow);
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .scene-info { flex: 1; }
+    .scene-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .scene-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+    .scene-time {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.25);
+      white-space: nowrap;
+    }
+
+    /* ── KPI ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .kpi-card {
+      background: #1C1F2B;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 18px 16px 14px;
+      text-align: center;
+    }
+    .kpi-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--yellow);
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+    .kpi-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .kpi-def {
+      font-size: 10px;
+      color: rgba(255,255,255,0.28);
+      line-height: 1.5;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 8px;
+      text-align: left;
+    }
+    .kpi-note {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+      padding: 6px 0 4px;
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.2);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .footer strong { color: rgba(255,255,255,0.4); }
+  </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">카카오뱅크 AI 서비스 기획자 — 면접 포트폴리오</div>
+  <h1>Money <span>Action Feed</span></h1>
+  <p class="hero-sub">
+    금융 데이터를 읽고, 지금 할 수 있는 액션을 발견해<br>
+    사용자가 OK 한 번으로 바로 실행하는 AI 액션 피드 프로토타입
+  </p>
+  <div class="hero-thesis">금융 AI는 정보 제공에서 → 행동 실행으로 진화해야 합니다</div>
+</div>
+
+<div class="container">
+
+  <!-- DEMO CTA -->
+  <a class="demo-cta" href="07_인터랙티브_demo.html" target="_blank">
+    <div class="demo-cta-icon">📱</div>
+    <div class="demo-cta-body">
+      <div class="demo-cta-label">MONEY ACTION FEED · PROTOTYPE</div>
+      <div class="demo-cta-title">인터랙티브 데모 실행</div>
+      <div class="demo-cta-sub">6개 씬 · AI 액션 발견 → 즉시 실행 흐름</div>
+    </div>
+    <div class="demo-cta-arrow">→</div>
+  </a>
+
+  <!-- SCENARIO -->
+  <div class="section-title">시나리오 흐름 — 1분 30초</div>
+  <div class="scenario-box">
+    <h3>박지영님의 5월 Money Action Feed 흐름</h3>
+    <div class="scene-row">
+      <div class="scene-num">1</div>
+      <div class="scene-info">
+        <div class="scene-name">🏠 카뱅 홈 화면</div>
+        <div class="scene-desc">AI 액션 카드 — "오늘 챙길 금융 액션이 있어요"</div>
+      </div>
+      <div class="scene-time">≈5초</div>
+    </div>
+    <div class="scene-row">
+      <div class="scene-num">2</div>
+      <div class="scene-info">
+        <div class="scene-name">📊 AI 액션 피드 — 액션 발견</div>
+        <div class="scene-desc">4월 외식비 +30만원↑ 분석 → 발견된 액션 2개 제시</div>
+      </div>
+      <div class="scene-time">≈15초</div>
+    </div>
+    <div class="scene-row">
+      <div class="scene-num">3</div>
+      <div class="scene-info">
+        <div class="scene-name">💰 생활 혜택 알림 (데모 예시)</div>
+        <div class="scene-desc">조건 자동확인 3가지 ✅ · 60만원 · 알림 한 번으로 설정 완료</div>
+      </div>
+      <div class="scene-time">≈20초</div>
+    </div>
+    <div class="scene-row">
+      <div class="scene-num">4</div>
+      <div class="scene-info">
+        <div class="scene-name">🍽️ 외식비 챌린지 → 트래킹 → 저금통 입금</div>
+        <div class="scene-desc">목표 30만원 · 실시간 타임라인 · 절약 5만원 + 1,000원 자동 저금</div>
+      </div>
+      <div class="scene-time">≈25초</div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="section-title">핵심 KPI</div>
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-val">~30%</div>
+      <div class="kpi-label">AI 액션 실행률</div>
+      <div class="kpi-def">홈 AI 카드 탭 → 최종 완료(알림 받기/참여하기)<br>현재 AI 도달 비율 7.5% 기반, 도달 유저 중 3명 중 1명 완료 가설 · 초기 목표</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-val">~40%</div>
+      <div class="kpi-label">월간 재방문율</div>
+      <div class="kpi-def">이번 달 AI 카드 탭 유저 → 다음 달 재탭 비율<br>카카오뱅크 WAU/MAU 73.5% 기반 · 앱 전체 재방문율 대비 보수적 가설</div>
+    </div>
+  </div>
+  <div class="kpi-note">업계 데이터를 참고한 초기 가설 수치 · 오픈 후 첫 달 데이터를 보고 재설정</div>
+
+  <!-- DELIVERABLES -->
+  <div class="section-title">산출물 목록</div>
+  <div class="deliverable-grid">
+
+    <a class="del-card" href="01_요구사항정의서.md" target="_blank">
+      <div class="del-num">01</div>
+      <div class="del-icon">📋</div>
+      <div class="del-title">요구사항 정의서</div>
+      <div class="del-desc">기능 요구사항 F-01~08, KPI, 비기능 요건</div>
+      <div class="del-badge">Markdown</div>
+    </a>
+
+    <a class="del-card" href="02_페르소나카드.md" target="_blank">
+      <div class="del-num">02</div>
+      <div class="del-icon">👩</div>
+      <div class="del-title">페르소나 카드</div>
+      <div class="del-desc">박지영, 43세, 천안시, 맞벌이 4인 가구</div>
+      <div class="del-badge">Markdown</div>
+    </a>
+
+    <a class="del-card" href="03_시나리오_거래데이터.md" target="_blank">
+      <div class="del-num">03</div>
+      <div class="del-icon">📖</div>
+      <div class="del-title">시나리오 + 거래 데이터</div>
+      <div class="del-desc">Scene별 AI 카피, 실제 거래 데이터, 챌린지 타임라인</div>
+      <div class="del-badge">Markdown</div>
+    </a>
+
+    <a class="del-card" href="05_디자인가이드.md" target="_blank">
+      <div class="del-num">05</div>
+      <div class="del-icon">🎨</div>
+      <div class="del-title">디자인 가이드</div>
+      <div class="del-desc">컬러 시스템, 타이포, AI 카피 원칙, 모션 가이드</div>
+      <div class="del-badge">Markdown</div>
+    </a>
+
+    <a class="del-card" href="04_UX_와이어프레임.html" target="_blank">
+      <div class="del-num">04</div>
+      <div class="del-icon">🖼️</div>
+      <div class="del-title">UX 와이어프레임</div>
+      <div class="del-desc">6개 씬, 클릭 가능한 저충실도 프로토타입</div>
+      <div class="del-badge green">HTML</div>
+    </a>
+
+    <a class="del-card" href="06_디자인시스템_demo.html" target="_blank">
+      <div class="del-num">06</div>
+      <div class="del-icon">🧩</div>
+      <div class="del-title">디자인 시스템</div>
+      <div class="del-desc">CSS 토큰, 컴포넌트 라이브러리, 카카오뱅크 align</div>
+      <div class="del-badge green">HTML</div>
+    </a>
+
+    <a class="del-card full" href="08_면접_QA카드.html" target="_blank">
+      <div class="del-num">08</div>
+      <div class="del-icon">💬</div>
+      <div class="del-title">기획 의도 — 왜 이렇게 설계했나요?</div>
+      <div class="del-desc">챗봇이 아닌 피드인 이유 · 기존 소비 분석과의 차이 · 페르소나 선정 · KPI 설계 · 지금 카카오뱅크에 필요한 이유</div>
+      <div class="del-badge">기획 설명 카드</div>
+    </a>
+
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <strong>카카오뱅크 AI 서비스 기획자 포지션</strong> · 박지영 페르소나 · 2026.05<br>
+  모든 파일은 로컬에서 브라우저로 바로 실행 가능합니다.
+</div>
+
+</body>
+</html>
