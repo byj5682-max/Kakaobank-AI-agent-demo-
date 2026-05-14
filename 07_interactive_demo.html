@@ -878,7 +878,7 @@
         </div>
 
         <div class="bottom-banner">
-          💡 자녀장려금 등 5월 생활 혜택도 AI가 알아서 챙겨드려요.
+          💡 자녀장려금 등 조건에 맞는 5월 생활 혜택이 있다면 알려드릴게요.
         </div>
 
       </div>
@@ -897,7 +897,7 @@
 
       <div class="content">
 
-        <p class="t-body-m" style="margin-bottom:16px;">지영님 데이터로 수령 조건을 자동으로 확인해봤어요.</p>
+        <p class="t-body-m" style="margin-bottom:16px;">지영님 데이터 기준으로 수령 조건을 확인해봤어요.</p>
 
         <div class="check-item" id="ck1">
           <span class="ci-icon">✅</span>
@@ -973,7 +973,7 @@
         <div class="amount-box">
           <div class="amt-label">5월 챌린지 목표</div>
           <div class="amt-big">30만원</div>
-          <div class="amt-note">AI 추천 · 지난 달 절반 수준</div>
+          <div class="amt-note">기준 제안 · 지난 달 절반 수준</div>
         </div>
 
         <div class="info-card">
@@ -1158,12 +1158,12 @@
      CONFIG
   ══════════════════════════════════════ */
   const SCENES = [
-    { label: 'Scene 1 · 홈 — AI 액션 카드', hint: '≈5초' },
-    { label: 'Scene 2 · AI 액션 피드', hint: '≈15초' },
-    { label: 'Scene 3-A · 생활 혜택 알림 (예시)', hint: '≈20초' },
-    { label: 'Scene 3-B · 챌린지 설정', hint: '≈5초' },
-    { label: 'Scene 3-B · 트래킹', hint: '≈15초' },
-    { label: 'Scene 3-B · 성공 🎉', hint: '≈5초' },
+    { label: 'Scene 1 · 홈 — AI 액션 카드' },
+    { label: 'Scene 2 · AI 액션 피드' },
+    { label: 'Scene 3-A · 생활 혜택 알림 (예시)' },
+    { label: 'Scene 3-B · 챌린지 설정' },
+    { label: 'Scene 3-B · 트래킹' },
+    { label: 'Scene 3-B · 성공 🎉' },
   ];
 
   let currentIdx = 0;
@@ -1221,7 +1221,7 @@
 
     // Update label
     const s = SCENES[idx];
-    document.getElementById('demo-label').textContent = s.label + '  (' + s.hint + ')';
+    document.getElementById('demo-label').textContent = s.label;
 
     // Scroll to top
     const c = newScene.querySelector('.content');
@@ -1372,7 +1372,7 @@
   /* ══════════════════════════════════════
      INIT
   ══════════════════════════════════════ */
-  document.getElementById('demo-label').textContent = SCENES[0].label + '  (' + SCENES[0].hint + ')';
+  document.getElementById('demo-label').textContent = SCENES[0].label;
 </script>
 </body>
 </html>
