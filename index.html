@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Money Action Feed — 백윤정 기획 포트폴리오 · Design Note</title>
+  <title>Money Action Feed — 백윤정 설계 노트</title>
   <style>
     :root {
       --bg:        #0E1420;
@@ -317,6 +317,18 @@
       font-style: normal;
     }
 
+    /* ── 레이어 태그 ── */
+    .layer-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: var(--r-full);
+      margin-bottom: 10px;
+    }
+    .layer-tag-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .layer-tag.user { background: rgba(254,229,0,0.10); color: var(--yellow); border: 1px solid rgba(254,229,0,0.2); }
+    .layer-tag.ai { background: rgba(155,170,191,0.08); color: var(--text-2); border: 1px solid rgba(155,170,191,0.15); }
+    .layer-block { margin-bottom: 6px; }
+
     /* ── 유틸 ── */
     .divider { height: 1px; background: var(--border); margin: 40px 0; }
     .mt-sm { margin-top: 12px; }
@@ -332,7 +344,7 @@
     <span class="nav-sep">·</span>
     <span class="nav-position">카카오뱅크 AI홈팀 서비스 기획자 지원</span>
   </div>
-  <div class="nav-right">기획 포트폴리오</div>
+  <div class="nav-right">설계 노트</div>
 </nav>
 
 <!-- ① 인트로 -->
@@ -389,27 +401,31 @@
       사용자가 OK 한 번으로 실행하는 구조.
       정보 제공이 아닌 <strong>행동 완결</strong>을 목적으로 설계했습니다.
     </p>
-    <div class="concept-row">
-      <div class="concept-step">
-        <span class="concept-icon">🔍</span>
-        <div class="concept-name">읽기</div>
-        <div class="concept-desc">소비·잔액·패턴으로 사용자 맥락 파악</div>
-      </div>
-      <div class="concept-sep">→</div>
-      <div class="concept-step">
-        <span class="concept-icon">💡</span>
-        <div class="concept-name">발견</div>
-        <div class="concept-desc">지금 할 수 있는 구체적 액션 제안</div>
-      </div>
-      <div class="concept-sep">→</div>
-      <div class="concept-step">
-        <span class="concept-icon">✅</span>
-        <div class="concept-name">실행</div>
-        <div class="concept-desc">OK 한 번으로 즉시 완료</div>
+    <div class="layer-block">
+      <div class="layer-tag user"><span class="layer-tag-dot"></span>사용자가 경험하는 것</div>
+      <div class="concept-row">
+        <div class="concept-step">
+          <span class="concept-icon">🔍</span>
+          <div class="concept-name">읽기</div>
+          <div class="concept-desc">소비·잔액·패턴으로 사용자 맥락 파악</div>
+        </div>
+        <div class="concept-sep">→</div>
+        <div class="concept-step">
+          <span class="concept-icon">💡</span>
+          <div class="concept-name">발견</div>
+          <div class="concept-desc">지금 할 수 있는 구체적 액션 제안</div>
+        </div>
+        <div class="concept-sep">→</div>
+        <div class="concept-step">
+          <span class="concept-icon">✅</span>
+          <div class="concept-name">실행</div>
+          <div class="concept-desc">OK 한 번으로 즉시 완료</div>
+        </div>
       </div>
     </div>
 
-    <div class="section-sub-label">AI 액션 경험 흐름 — Agent Workflow 기준</div>
+    <div class="layer-block">
+      <div class="layer-tag ai"><span class="layer-tag-dot"></span>AI가 실제로 하는 것</div>
     <div class="workflow-row">
       <div class="workflow-step">
         <div class="workflow-num">1</div>
@@ -440,6 +456,7 @@
         <div class="workflow-name">학습</div>
         <div class="workflow-desc">선택·완료·이탈을 기준으로 다음 제안을 개선합니다</div>
       </div>
+    </div>
     </div>
   </section>
 
@@ -562,6 +579,22 @@
     </div>
     <p class="kpi-note mt-sm">AI 이용률: MAU 2,000만 대비 누적 이용자 300만 기준 · <a href="https://www.edaily.co.kr/News/Read?newsId=03591606645350192&mediaCodeNo=257" target="_blank" rel="noopener" style="color:var(--text-3);text-decoration:underline">이데일리 2026.02.13</a></p>
   </section>
+
+  <!-- 실서비스 검토 과제 note -->
+  <div class="wrap" style="padding-bottom: 0;">
+    <div style="
+      border-left: 3px solid var(--border-2);
+      padding: 14px 18px;
+      margin-bottom: 0;
+      background: rgba(255,255,255,0.02);
+      border-radius: 0 var(--r-md) var(--r-md) 0;
+    ">
+      <div style="font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;">실서비스 검토 과제</div>
+      <p style="font-size: 13px; color: var(--text-3); line-height: 1.7;">
+        실제 서비스 적용 시에는 사용자 동의 범위, 제안 근거 노출, 오추천 대응, 외부 정책·혜택 데이터 연동 기준을 함께 정의해야 합니다.
+      </p>
+    </div>
+  </div>
 
   <!-- ⑦ 산출물 -->
   <section class="section" id="deliverables">
