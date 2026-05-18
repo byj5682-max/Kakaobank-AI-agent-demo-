@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Action Feed — 디자인시스템</title>
+  <style>
+    /* ══════════════════════════════════════
+       DESIGN TOKENS
+       (와이어프레임 5개 화면에서 추출)
+    ══════════════════════════════════════ */
+    :root {
+      /* Color */
+      --color-bg:          #111318;
+      --color-surface:     #1C1F2B;
+      --color-surface-2:   #20233A;
+      --color-primary:     #FEE500;
+      --color-on-primary:  #191919;
+      --color-secondary:   #6C47FF;
+      --color-secondary-lt:#A78BFA;
+      --color-positive:    #4ADE80;
+      --color-text:        #FFFFFF;
+      --color-text-muted:  rgba(255,255,255,0.45);
+      --color-text-dim:    rgba(255,255,255,0.22);
+      --color-border:      rgba(255,255,255,0.07);
+      --color-border-y:    rgba(254,229,0,0.22);
+      --color-border-p:    rgba(108,71,255,0.25);
+
+      /* Typography */
+      --font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      --font-hero:   900 32px/1.2 var(--font-family);
+      --font-title:  800 20px/1.3 var(--font-family);
+      --font-label:  700 11px/1 var(--font-family);
+      --font-body:   400 14px/1.65 var(--font-family);
+      --font-caption:400 11px/1.5 var(--font-family);
+      --font-metric: 900 28px/1 var(--font-family);
+
+      /* Spacing */
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 40px;
+
+      /* Radius */
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   16px;
+      --radius-full: 9999px;
+    }
+
+    /* ══ Base Reset ══ */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font: var(--font-body);
+      font-family: var(--font-family);
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    /* ══════════════════════════════════════
+       DESIGN SYSTEM LAYOUT
+    ══════════════════════════════════════ */
+    .ds-header {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-md) var(--space-xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .ds-header-title {
+      font: var(--font-title);
+      font-family: var(--font-family);
+      color: var(--color-primary);
+      letter-spacing: -0.3px;
+    }
+    .ds-header-meta { font: var(--font-caption); font-family:var(--font-family); color: var(--color-text-dim); }
+
+    .ds-nav {
+      display: flex;
+      gap: 4px;
+    }
+    .ds-nav a {
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      transition: color 0.15s, background 0.15s;
+    }
+    .ds-nav a:hover { color: var(--color-primary); background: rgba(254,229,0,0.07); }
+
+    .ds-body {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: var(--space-xl) var(--space-lg);
+    }
+
+    /* 섹션 */
+    .ds-section { margin-bottom: 64px; }
+    .ds-section-title {
+      font: var(--font-label);
+      font-family: var(--font-family);
+      color: var(--color-text-dim);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: var(--space-lg);
+      padding-bottom: var(--space-sm);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    /* 컴포넌트 프리뷰 카드 */
+    .ds-preview {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: var(--space-md);
+    }
+    .ds-preview-label {
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-sm) var(--space-md);
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      font-weight: 700;
+      color: var(--color-text-dim);
+      display: flex;
+      justify-content: space-between;
+    }
+    .ds-preview-label code {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--color-secondary-lt);
+    }
+    .ds-preview-body {
+      padding: var(--space-lg);
+    }
+    .ds-preview-body.dark { background: var(--color-bg); }
+
+    /* Token grid */
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: var(--space-sm);
+    }
+    .token-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+    }
+    .token-swatch {
+      width: 100%;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-sm);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .token-name {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--color-secondary-lt);
+      margin-bottom: 4px;
+    }
+    .token-value {
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      color: var(--color-text-muted);
+    }
+
+    /* ══════════════════════════════════════
+       COMPONENT LIBRARY
+    ══════════════════════════════════════ */
+
+    /* 1. HeroBlock */
+    .hero-block {
+      background: linear-gradient(160deg, #1A1A2E 0%, #16213E 50%, #0D1B3E 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl) var(--space-lg);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-block::before {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(108,71,255,0.12) 0%, transparent 65%);
+      top: -100px; left: 50%; transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .hero-block-badge {
+      display: inline-block;
+      background: rgba(108,71,255,0.15);
+      border: 1px solid var(--color-border-p);
+      color: var(--color-secondary-lt);
+      font: var(--font-label);
+      font-family: var(--font-family);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.8px;
+      margin-bottom: var(--space-md);
+    }
+    .hero-block-title {
+      font: var(--font-hero);
+      font-family: var(--font-family);
+      color: var(--color-text);
+      letter-spacing: -1px;
+      margin-bottom: var(--space-sm);
+    }
+    .hero-block-title .hl { color: var(--color-primary); }
+    .hero-block-sub {
+      font: var(--font-body);
+      font-family: var(--font-family);
+      color: var(--color-text-muted);
+      max-width: 380px;
+      margin: 0 auto var(--space-lg);
+    }
+    .hero-block-stats {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-xl);
+      flex-wrap: wrap;
+    }
+    .hero-stat-val {
+      font: var(--font-metric);
+      font-family: var(--font-family);
+      color: var(--color-primary);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .hero-stat-label {
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      color: var(--color-text-muted);
+    }
+
+    /* 2. ConceptCard */
+    .concept-card {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .concept-step {
+      flex: 1;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .concept-step:hover { border-color: var(--color-border-y); }
+    .concept-step-icon {
+      font-size: 28px;
+      margin-bottom: var(--space-sm);
+    }
+    .concept-step-title {
+      font: var(--font-label);
+      font-family: var(--font-family);
+      color: var(--color-text);
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+    }
+    .concept-step-desc {
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    .concept-arrow {
+      font-size: 18px;
+      color: var(--color-primary);
+      flex-shrink: 0;
+    }
+
+    /* 3. SceneStrip */
+    .scene-strip {
+      overflow-x: auto;
+      padding-bottom: var(--space-sm);
+    }
+    .scene-strip-inner {
+      display: flex;
+      gap: var(--space-sm);
+      min-width: max-content;
+    }
+    .scene-card {
+      width: 120px;
+      flex-shrink: 0;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-sm);
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .scene-card:hover { border-color: var(--color-border-y); transform: translateY(-2px); }
+    .scene-phone {
+      width: 100%;
+      height: 140px;
+      background: var(--color-bg);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    .scene-num {
+      font: var(--font-label);
+      font-family: var(--font-family);
+      color: var(--color-primary);
+      margin-bottom: 3px;
+    }
+    .scene-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.4;
+      margin-bottom: 3px;
+    }
+    .scene-time {
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      color: var(--color-text-dim);
+    }
+
+    /* 4. MetricCard */
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: var(--space-sm);
+    }
+    .metric-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+    }
+    .metric-val {
+      font: var(--font-metric);
+      font-family: var(--font-family);
+      color: var(--color-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+      margin-bottom: var(--space-sm);
+    }
+    .metric-def {
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      color: var(--color-text-dim);
+      line-height: 1.5;
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-sm);
+      text-align: left;
+    }
+
+    /* 5. ConditionTable */
+    .condition-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .condition-table th {
+      font: var(--font-label);
+      font-family: var(--font-family);
+      color: var(--color-text-dim);
+      letter-spacing: 0.6px;
+      padding: var(--space-sm) var(--space-md);
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .condition-table td {
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      color: var(--color-text-muted);
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+    .condition-table tr:last-child td { border-bottom: none; }
+    .condition-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+    }
+    .condition-badge.ok {
+      background: rgba(74,222,128,0.12);
+      color: var(--color-positive);
+      border: 1px solid rgba(74,222,128,0.2);
+    }
+    .condition-badge.na {
+      background: rgba(255,255,255,0.05);
+      color: var(--color-text-dim);
+      border: 1px solid var(--color-border);
+    }
+
+    /* 6. FunnelBar */
+    .funnel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .funnel-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+    .funnel-label {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      width: 110px;
+      flex-shrink: 0;
+    }
+    .funnel-bar-wrap {
+      flex: 1;
+      height: 20px;
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .funnel-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-primary), rgba(254,229,0,0.5));
+      border-radius: var(--radius-full);
+      transition: width 0.6s ease;
+    }
+    .funnel-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text);
+      width: 40px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* 7. SectionLabel */
+    .section-label {
+      font: var(--font-label);
+      font-family: var(--font-family);
+      color: var(--color-text-dim);
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: var(--space-md);
+    }
+
+    /* 8. CTAButton */
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      font-size: 14px;
+      font-weight: 800;
+      padding: 13px var(--space-lg);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(254,229,0,0.25);
+    }
+    .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(254,229,0,0.35); }
+    .cta-btn:active { transform: scale(0.98); }
+    .cta-btn.secondary {
+      background: transparent;
+      color: var(--color-secondary-lt);
+      border: 1px solid var(--color-border-p);
+      box-shadow: none;
+    }
+    .cta-btn.secondary:hover { background: rgba(108,71,255,0.1); box-shadow: none; }
+
+    /* 9. TagChip */
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font: var(--font-caption);
+      font-family: var(--font-family);
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+    }
+    .tag-chip.primary {
+      background: rgba(254,229,0,0.1);
+      color: var(--color-primary);
+      border: 1px solid rgba(254,229,0,0.2);
+    }
+    .tag-chip.secondary {
+      background: rgba(108,71,255,0.12);
+      color: var(--color-secondary-lt);
+      border: 1px solid var(--color-border-p);
+    }
+    .tag-chip.positive {
+      background: rgba(74,222,128,0.1);
+      color: var(--color-positive);
+      border: 1px solid rgba(74,222,128,0.2);
+    }
+
+    /* 간격 유틸 */
+    .mt-sm { margin-top: var(--space-sm); }
+    .mt-md { margin-top: var(--space-md); }
+    .flex-gap { display: flex; flex-wrap: wrap; gap: var(--space-sm); align-items: center; }
+
+    /* 토큰 타이포 샘플 */
+    .type-sample { margin-bottom: var(--space-md); }
+    .type-sample-label { font: var(--font-caption); font-family:var(--font-family); color:var(--color-text-dim); margin-bottom:4px; font-family:monospace; }
+  </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="ds-header">
+  <div>
+    <div class="ds-header-title">Money Action Feed · 디자인시스템</div>
+    <div class="ds-header-meta">06_design-system.html · 와이어프레임 → 토큰 → 컴포넌트</div>
+  </div>
+  <nav class="ds-nav">
+    <a href="#tokens">토큰</a>
+    <a href="#components">컴포넌트</a>
+    <a href="#patterns">패턴</a>
+  </nav>
+</header>
+
+<div class="ds-body">
+
+  <!-- ── 1. 토큰 ── -->
+  <section class="ds-section" id="tokens">
+    <div class="ds-section-title">Design Tokens</div>
+
+    <!-- 컬러 -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>Color Tokens</span>
+        <code>--color-*</code>
+      </div>
+      <div class="ds-preview-body">
+        <div class="token-grid">
+          <div class="token-card">
+            <div class="token-swatch" style="background:#111318"></div>
+            <div class="token-name">--color-bg</div>
+            <div class="token-value">#111318</div>
+          </div>
+          <div class="token-card">
+            <div class="token-swatch" style="background:#1C1F2B"></div>
+            <div class="token-name">--color-surface</div>
+            <div class="token-value">#1C1F2B</div>
+          </div>
+          <div class="token-card">
+            <div class="token-swatch" style="background:#FEE500"></div>
+            <div class="token-name">--color-primary</div>
+            <div class="token-value">#FEE500 (카카오 옐로우)</div>
+          </div>
+          <div class="token-card">
+            <div class="token-swatch" style="background:#6C47FF"></div>
+            <div class="token-name">--color-secondary</div>
+            <div class="token-value">#6C47FF (퍼플)</div>
+          </div>
+          <div class="token-card">
+            <div class="token-swatch" style="background:#4ADE80"></div>
+            <div class="token-name">--color-positive</div>
+            <div class="token-value">#4ADE80</div>
+          </div>
+          <div class="token-card">
+            <div class="token-swatch" style="background:rgba(255,255,255,0.07);border:1px dashed rgba(255,255,255,0.15)"></div>
+            <div class="token-name">--color-border</div>
+            <div class="token-value">rgba(255,255,255,0.07)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 타이포그래피 -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>Typography Tokens</span>
+        <code>--font-*</code>
+      </div>
+      <div class="ds-preview-body">
+        <div class="type-sample">
+          <div class="type-sample-label">--font-hero · 900/32px/-0.8px</div>
+          <div style="font:var(--font-hero);font-family:var(--font-family);letter-spacing:-0.8px;color:var(--color-text)">금융 AI는 행동을 만든다</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-sample-label">--font-title · 800/20px/-0.3px</div>
+          <div style="font:var(--font-title);font-family:var(--font-family);color:var(--color-text)">솔루션 개요</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-sample-label">--font-metric · 900/28px</div>
+          <div style="font:var(--font-metric);font-family:var(--font-family);color:var(--color-primary)">~30%</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-sample-label">--font-label · 700/11px/+1px uppercase</div>
+          <div style="font:var(--font-label);font-family:var(--font-family);letter-spacing:1px;text-transform:uppercase;color:var(--color-text-dim)">Section Label</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-sample-label">--font-body · 400/14px</div>
+          <div style="font:var(--font-body);font-family:var(--font-family);color:var(--color-text-muted)">AI가 맥락을 읽고 지금 할 수 있는 액션을 발견해 사용자가 OK 한 번으로 실행합니다.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. 컴포넌트 ── -->
+  <section class="ds-section" id="components">
+    <div class="ds-section-title">Components</div>
+
+    <!-- HeroBlock -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>01 · HeroBlock</span>
+        <code>.hero-block</code>
+      </div>
+      <div class="ds-preview-body dark">
+        <div class="hero-block">
+          <div class="hero-block-badge">카카오뱅크 AI홈팀 · 기획 데모</div>
+          <h1 class="hero-block-title">Money <span class="hl">Action Feed</span></h1>
+          <p class="hero-block-sub">AI가 맥락을 읽고 → 액션을 발견해 → 사용자가 OK 한 번으로 실행</p>
+          <div class="hero-block-stats">
+            <div>
+              <span class="hero-stat-val">~30%</span>
+              <span class="hero-stat-label">AI 액션 실행률</span>
+            </div>
+            <div>
+              <span class="hero-stat-val">~40%</span>
+              <span class="hero-stat-label">월간 재방문율</span>
+            </div>
+            <div>
+              <span class="hero-stat-val">4 Scenes</span>
+              <span class="hero-stat-label">사용자 흐름</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ConceptCard -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>02 · ConceptCard</span>
+        <code>.concept-card</code>
+      </div>
+      <div class="ds-preview-body">
+        <div class="concept-card">
+          <div class="concept-step">
+            <div class="concept-step-icon">🔍</div>
+            <div class="concept-step-title">읽기</div>
+            <div class="concept-step-desc">AI가 소비·잔액·패턴 맥락 파악</div>
+          </div>
+          <div class="concept-arrow">→</div>
+          <div class="concept-step">
+            <div class="concept-step-icon">💡</div>
+            <div class="concept-step-title">발견</div>
+            <div class="concept-step-desc">지금 할 수 있는 액션 제안</div>
+          </div>
+          <div class="concept-arrow">→</div>
+          <div class="concept-step">
+            <div class="concept-step-icon">✅</div>
+            <div class="concept-step-title">실행</div>
+            <div class="concept-step-desc">OK 한 번으로 즉시 완료</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SceneStrip -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>03 · SceneStrip</span>
+        <code>.scene-strip</code>
+      </div>
+      <div class="ds-preview-body dark">
+        <div class="scene-strip">
+          <div class="scene-strip-inner">
+            <div class="scene-card">
+              <div class="scene-phone">🏠</div>
+              <div class="scene-num">SCENE 1</div>
+              <div class="scene-title">카뱅 홈 AI 액션 카드</div>
+              <div class="scene-time">≈5초</div>
+            </div>
+            <div class="scene-card">
+              <div class="scene-phone">📊</div>
+              <div class="scene-num">SCENE 2</div>
+              <div class="scene-title">소비 분석 → 액션 발견</div>
+              <div class="scene-time">≈15초</div>
+            </div>
+            <div class="scene-card">
+              <div class="scene-phone">💰</div>
+              <div class="scene-num">SCENE 3</div>
+              <div class="scene-title">혜택 알림 원탭 설정</div>
+              <div class="scene-time">≈20초</div>
+            </div>
+            <div class="scene-card">
+              <div class="scene-phone">🍽️</div>
+              <div class="scene-num">SCENE 4</div>
+              <div class="scene-title">챌린지 → 저금통 입금</div>
+              <div class="scene-time">≈25초</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MetricCard -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>04 · MetricCard</span>
+        <code>.metric-card</code>
+      </div>
+      <div class="ds-preview-body">
+        <div class="metric-row">
+          <div class="metric-card">
+            <div class="metric-val">~30%</div>
+            <div class="metric-label">AI 액션 실행률</div>
+            <div class="metric-def">홈 AI 카드 탭 → 최종 완료 비율. 초기 목표 가설 수치.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">~40%</div>
+            <div class="metric-label">월간 재방문율</div>
+            <div class="metric-def">이번 달 AI 카드 탭 → 다음 달 재탭 비율.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">7.5%</div>
+            <div class="metric-label">현재 AI 도달률</div>
+            <div class="metric-def">기준값. 이걸 개선하는 것이 목표.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ConditionTable -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>05 · ConditionTable</span>
+        <code>.condition-table</code>
+      </div>
+      <div class="ds-preview-body">
+        <table class="condition-table">
+          <thead>
+            <tr>
+              <th>AI 노출 조건</th>
+              <th>기준값</th>
+              <th>충족여부</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>최근 30일 소비 데이터 존재</td>
+              <td>1건 이상</td>
+              <td><span class="condition-badge ok">✓ 충족</span></td>
+            </tr>
+            <tr>
+              <td>특정 카테고리 전월 대비 이상 지출</td>
+              <td>+20% 이상</td>
+              <td><span class="condition-badge ok">✓ 충족</span></td>
+            </tr>
+            <tr>
+              <td>유사 사용자 행동 패턴 매칭</td>
+              <td>신뢰도 70% 이상</td>
+              <td><span class="condition-badge na">미확인</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FunnelBar -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>06 · FunnelBar</span>
+        <code>.funnel</code>
+      </div>
+      <div class="ds-preview-body">
+        <div class="funnel">
+          <div class="funnel-row">
+            <div class="funnel-label">홈 화면 노출</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%"></div></div>
+            <div class="funnel-val">100%</div>
+          </div>
+          <div class="funnel-row">
+            <div class="funnel-label">AI 카드 탭</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:7.5%"></div></div>
+            <div class="funnel-val">7.5%</div>
+          </div>
+          <div class="funnel-row">
+            <div class="funnel-label">액션 완료</div>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:2.25%"></div></div>
+            <div class="funnel-val">~30%↑</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTAButton -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>07 · CTAButton</span>
+        <code>.cta-btn</code>
+      </div>
+      <div class="ds-preview-body">
+        <div class="flex-gap">
+          <a class="cta-btn" href="#">📱 데모 실행 →</a>
+          <a class="cta-btn secondary" href="#">기획 의도 보기</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TagChip -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>08 · TagChip</span>
+        <code>.tag-chip</code>
+      </div>
+      <div class="ds-preview-body">
+        <div class="flex-gap">
+          <span class="tag-chip primary">역량 #1 · 의도 정확 실행</span>
+          <span class="tag-chip secondary">역량 #2 · 행동 전환 설계</span>
+          <span class="tag-chip positive">✓ JD 매핑</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 3. 패턴 ── -->
+  <section class="ds-section" id="patterns">
+    <div class="ds-section-title">Usage Patterns</div>
+
+    <!-- Screen B 조합 패턴 -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>Pattern · Screen B 조합 (솔루션 개요)</span>
+        <code>SectionLabel + ConceptCard + TagChip + CTAButton</code>
+      </div>
+      <div class="ds-preview-body dark">
+        <div class="section-label">솔루션</div>
+        <div class="concept-card mt-md">
+          <div class="concept-step">
+            <div class="concept-step-icon">🔍</div>
+            <div class="concept-step-title">읽기</div>
+            <div class="concept-step-desc">AI가 금융 맥락 파악</div>
+          </div>
+          <div class="concept-arrow">→</div>
+          <div class="concept-step">
+            <div class="concept-step-icon">💡</div>
+            <div class="concept-step-title">발견</div>
+            <div class="concept-step-desc">지금 할 수 있는 액션</div>
+          </div>
+          <div class="concept-arrow">→</div>
+          <div class="concept-step">
+            <div class="concept-step-icon">✅</div>
+            <div class="concept-step-title">실행</div>
+            <div class="concept-step-desc">OK 한 번으로 완료</div>
+          </div>
+        </div>
+        <div class="flex-gap mt-md">
+          <span class="tag-chip primary">역량 #1 · 의도 정확 실행</span>
+          <span class="tag-chip secondary">역량 #2 · 행동 전환 설계</span>
+        </div>
+        <div class="mt-md">
+          <a class="cta-btn" href="07_interactive_demo.html">📱 데모로 이동 →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen E 조합 패턴 -->
+    <div class="ds-preview">
+      <div class="ds-preview-label">
+        <span>Pattern · Screen E 조합 (KPI 설계)</span>
+        <code>SectionLabel + MetricCard + FunnelBar</code>
+      </div>
+      <div class="ds-preview-body dark">
+        <div class="section-label">KPI 설계</div>
+        <div class="metric-row mt-md">
+          <div class="metric-card">
+            <div class="metric-val">~30%</div>
+            <div class="metric-label">AI 액션 실행률</div>
+            <div class="metric-def">홈 탭 → 완료. 초기 가설 목표.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">~40%</div>
+            <div class="metric-label">월간 재방문율</div>
+            <div class="metric-def">AI 카드 탭 유저의 다음달 재탭.</div>
+          </div>
+        </div>
+        <div class="mt-md">
+          <div class="funnel">
+            <div class="funnel-row">
+              <div class="funnel-label">홈 노출</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%"></div></div>
+              <div class="funnel-val">100%</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">AI 카드 탭</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:7.5%"></div></div>
+              <div class="funnel-val">7.5%</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">액션 완료</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:2.25%"></div></div>
+              <div class="funnel-val">목표 30%↑</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</div><!-- /ds-body -->
+</body>
+</html>

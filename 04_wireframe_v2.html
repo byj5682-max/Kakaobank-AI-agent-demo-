@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Money Action Feed — 와이어프레임 v2</title>
+  <style>
+    /*
+    ╔══════════════════════════════════════╗
+    ║  WIREFRAME v2                        ║
+    ║  디자인 방향: 빅테크 미니멀           ║
+    ║  컬러 포인트: #FEE500 단독           ║
+    ║  레퍼런스: Linear · Vercel · shadcn  ║
+    ╚══════════════════════════════════════╝
+    */
+
+    :root {
+      --bg:        #09090B;
+      --surface:   #18181B;
+      --surface-2: #27272A;
+      --yellow:    #FEE500;
+      --on-yellow: #0A0A0B;
+      --text:      #FAFAFA;
+      --text-2:    #A1A1AA;
+      --text-3:    #52525B;
+      --border:    rgba(255,255,255,0.06);
+      --border-2:  rgba(255,255,255,0.10);
+      --positive:  #22C55E;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+                   'Noto Sans KR', ui-sans-serif, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* ── 상단 바 ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(9,9,11,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .topbar-version {
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(254,229,0,0.1);
+      color: var(--yellow);
+      border: 1px solid rgba(254,229,0,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .topbar-right {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    /* ── 페이지 레이아웃 ── */
+    .layout {
+      display: flex;
+      gap: 0;
+    }
+
+    /* ── 사이드 인덱스 ── */
+    .side-index {
+      width: 180px;
+      flex-shrink: 0;
+      padding: 24px 16px;
+      position: sticky;
+      top: 41px;
+      height: calc(100vh - 41px);
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+    }
+    .side-index-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-3);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .side-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      color: var(--text-2);
+      font-size: 12px;
+      font-weight: 500;
+      transition: color 0.15s, background 0.15s;
+      margin-bottom: 2px;
+    }
+    .side-link:hover { color: var(--text); background: var(--surface); }
+    .side-link-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      flex-shrink: 0;
+    }
+    .side-link.active .side-link-dot { background: var(--yellow); }
+    .side-link.active { color: var(--text); }
+
+    /* ── 메인 콘텐츠 ── */
+    .main {
+      flex: 1;
+      padding: 40px 48px 80px;
+      max-width: 680px;
+    }
+
+    /* ── 화면 블록 ── */
+    .screen-block {
+      margin-bottom: 64px;
+    }
+    .screen-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .screen-id {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-family: ui-monospace, 'SF Mono', monospace;
+    }
+    .screen-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .screen-role {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--yellow);
+      background: rgba(254,229,0,0.08);
+      border: 1px solid rgba(254,229,0,0.15);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* ── 와이어프레임 캔버스 ── */
+    .wf-canvas {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    /* 와이어프레임 블록 공통 */
+    .wf-row { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .wf-row:last-child { border-bottom: none; }
+    .wf-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-3);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      font-family: ui-monospace, monospace;
+    }
+
+    /* 플레이스홀더 바 */
+    .ph { background: var(--surface-2); border-radius: 3px; }
+    .ph-xl  { height: 20px; }
+    .ph-lg  { height: 14px; }
+    .ph-md  { height: 11px; }
+    .ph-sm  { height: 9px; }
+    .ph-icon{ width: 36px; height: 36px; border-radius: 8px; }
+    .ph-thumb { height: 110px; border-radius: var(--radius-md); }
+    .ph.w-full { width: 100%; }
+    .ph.w-80   { width: 80%; }
+    .ph.w-65   { width: 65%; }
+    .ph.w-50   { width: 50%; }
+    .ph.w-40   { width: 40%; }
+    .ph.w-30   { width: 30%; }
+    .mb-6  { margin-bottom: 6px; }
+    .mb-10 { margin-bottom: 10px; }
+
+    /* Hero 영역 */
+    .wf-hero-area {
+      padding: 28px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      text-align: center;
+    }
+    .wf-hero-tag {
+      display: inline-block;
+      width: 100px; height: 20px;
+      background: rgba(254,229,0,0.12);
+      border: 1px solid rgba(254,229,0,0.2);
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    .wf-hero-h {
+      height: 22px;
+      background: var(--surface-2);
+      border-radius: 4px;
+      width: 70%;
+      margin: 0 auto 10px;
+    }
+    .wf-hero-sub {
+      height: 12px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      width: 55%;
+      margin: 0 auto;
+    }
+
+    /* 메트릭 그리드 */
+    .wf-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .wf-metric-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+    }
+    .wf-metric-val {
+      height: 22px;
+      background: rgba(254,229,0,0.15);
+      border-radius: 3px;
+      margin-bottom: 6px;
+    }
+    .wf-metric-label { height: 9px; background: var(--surface-2); border-radius: 2px; width: 70%; margin: 0 auto; }
+
+    /* Before/After */
+    .wf-ba {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .wf-ba-col {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+    }
+    .wf-ba-header {
+      height: 11px;
+      background: var(--surface-2);
+      border-radius: 3px;
+      width: 50%;
+      margin-bottom: 10px;
+    }
+    .wf-ba-col.after .wf-ba-header { background: rgba(254,229,0,0.2); }
+    .wf-ba-item { height: 9px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-bottom: 5px; }
+    .wf-ba-item:last-child { margin-bottom: 0; width: 75%; }
+
+    /* Concept 3단계 */
+    .wf-concept {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wf-step {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .wf-step-icon { width: 28px; height: 28px; background: var(--surface-2); border-radius: 7px; margin: 0 auto 8px; }
+    .wf-step-t { height: 10px; background: var(--surface-2); border-radius: 2px; width: 75%; margin: 0 auto 5px; }
+    .wf-step-s { height: 8px; background: rgba(255,255,255,0.04); border-radius: 2px; width: 55%; margin: 0 auto; }
+    .wf-arrow { font-size: 14px; color: var(--text-3); flex-shrink: 0; }
+
+    /* Scene Strip */
+    .wf-scene-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .wf-scene-item {
+      flex-shrink: 0;
+      width: 110px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px;
+    }
+    .wf-phone-box {
+      height: 120px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wf-phone-inner { width: 32px; height: 48px; background: var(--surface-2); border-radius: 4px; }
+    .wf-scene-n { height: 8px; background: rgba(254,229,0,0.15); border-radius: 2px; width: 40%; margin-bottom: 4px; }
+    .wf-scene-t { height: 9px; background: var(--surface-2); border-radius: 2px; margin-bottom: 3px; }
+    .wf-scene-time { height: 8px; background: rgba(255,255,255,0.04); border-radius: 2px; width: 50%; }
+
+    /* Condition table */
+    .wf-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .wf-table th {
+      padding: 8px 10px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border-2);
+      text-align: left;
+    }
+    .wf-table-th-bar { height: 9px; background: var(--surface-2); border-radius: 2px; width: 60%; }
+    .wf-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .wf-table tr:last-child td { border-bottom: none; }
+    .wf-td-bar { height: 9px; background: var(--surface-2); border-radius: 2px; }
+    .wf-badge { display: inline-block; height: 18px; width: 44px; background: rgba(34,197,94,0.15); border-radius: 4px; }
+    .wf-badge.na { background: var(--surface-2); }
+
+    /* Funnel */
+    .wf-funnel { display: flex; flex-direction: column; gap: 7px; }
+    .wf-funnel-row { display: flex; align-items: center; gap: 10px; }
+    .wf-funnel-label { width: 90px; height: 9px; background: var(--surface-2); border-radius: 2px; flex-shrink: 0; }
+    .wf-funnel-wrap { flex: 1; height: 14px; background: var(--bg); border-radius: 999px; overflow: hidden; }
+    .wf-funnel-bar { height: 100%; background: rgba(254,229,0,0.25); border-radius: 999px; }
+    .wf-funnel-num { width: 30px; height: 9px; background: var(--surface-2); border-radius: 2px; flex-shrink: 0; }
+
+    /* KPI 카드 */
+    .wf-kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .wf-kpi-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+    .wf-kpi-val { height: 22px; background: rgba(254,229,0,0.15); border-radius: 3px; margin-bottom: 6px; width: 50%; }
+    .wf-kpi-label { height: 9px; background: var(--surface-2); border-radius: 2px; margin-bottom: 8px; width: 80%; }
+    .wf-kpi-def { height: 8px; background: rgba(255,255,255,0.04); border-radius: 2px; margin-bottom: 4px; }
+
+    /* CTA 버튼 */
+    .wf-cta-area { padding: 16px 20px; }
+    .wf-cta-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 42px;
+      background: rgba(254,229,0,0.15);
+      border: 1px solid rgba(254,229,0,0.25);
+      border-radius: var(--radius-md);
+    }
+    .wf-cta-inner { height: 12px; background: rgba(254,229,0,0.3); border-radius: 2px; width: 40%; }
+
+    /* Tag chips */
+    .wf-tags { display: flex; gap: 6px; }
+    .wf-tag { height: 22px; background: var(--surface-2); border-radius: 999px; }
+    .wf-tag.y { background: rgba(254,229,0,0.1); border: 1px solid rgba(254,229,0,0.15); }
+
+    /* Thesis */
+    .wf-thesis-area {
+      padding: 20px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    .wf-thesis-bar { height: 16px; background: var(--surface-2); border-radius: 3px; margin: 0 auto 6px; }
+
+    /* ── 어노테이션 ── */
+    .annotation {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: rgba(254,229,0,0.04);
+      border-left: 2px solid rgba(254,229,0,0.3);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 11px;
+      color: var(--text-2);
+      line-height: 1.65;
+    }
+    .annotation strong { color: var(--yellow); font-weight: 600; }
+
+    /* ── 화면 사이 연결 ── */
+    .connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-3);
+      margin-bottom: 24px;
+    }
+    .connector::before, .connector::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── 구분선 ── */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 20px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 상단 바 -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-title">Money Action Feed</span>
+    <span class="topbar-version">Wireframe v2</span>
+  </div>
+  <span class="topbar-right">04_wireframe_v2.html · 요구사항 기반 · 화면 5개</span>
+</div>
+
+<div class="layout">
+
+  <!-- 사이드 인덱스 -->
+  <nav class="side-index">
+    <div class="side-index-title">Screens</div>
+    <a class="side-link active" href="#screen-a">
+      <span class="side-link-dot"></span>A. 문제 정의
+    </a>
+    <a class="side-link" href="#screen-b">
+      <span class="side-link-dot"></span>B. 솔루션 개요
+    </a>
+    <a class="side-link" href="#screen-c">
+      <span class="side-link-dot"></span>C. 사용자 흐름
+    </a>
+    <a class="side-link" href="#screen-d">
+      <span class="side-link-dot"></span>D. AI 품질 기준
+    </a>
+    <a class="side-link" href="#screen-e">
+      <span class="side-link-dot"></span>E. KPI 설계
+    </a>
+  </nav>
+
+  <!-- 메인 -->
+  <main class="main">
+
+    <!-- SCREEN A -->
+    <div class="screen-block" id="screen-a">
+      <div class="screen-header">
+        <span class="screen-id">Screen A</span>
+        <span class="screen-name">문제 정의</span>
+        <span class="screen-role">역량 #2 도입</span>
+      </div>
+      <div class="wf-canvas">
+        <!-- Hero -->
+        <div class="wf-hero-area">
+          <div class="wf-hero-tag"></div>
+          <div class="wf-hero-h"></div>
+          <div class="wf-hero-sub"></div>
+        </div>
+        <!-- 임팩트 수치 3개 -->
+        <div class="wf-row">
+          <div class="wf-label">HeroBlock · 임팩트 수치</div>
+          <div class="wf-metrics">
+            <div class="wf-metric-box"><div class="wf-metric-val"></div><div class="wf-metric-label"></div></div>
+            <div class="wf-metric-box"><div class="wf-metric-val"></div><div class="wf-metric-label"></div></div>
+            <div class="wf-metric-box"><div class="wf-metric-val"></div><div class="wf-metric-label"></div></div>
+          </div>
+        </div>
+        <!-- Before / After -->
+        <div class="wf-row">
+          <div class="wf-label">Before / After 비교</div>
+          <div class="wf-ba">
+            <div class="wf-ba-col">
+              <div class="wf-ba-header"></div>
+              <div class="wf-ba-item"></div>
+              <div class="wf-ba-item"></div>
+              <div class="wf-ba-item"></div>
+            </div>
+            <div class="wf-ba-col after">
+              <div class="wf-ba-header"></div>
+              <div class="wf-ba-item"></div>
+              <div class="wf-ba-item"></div>
+              <div class="wf-ba-item"></div>
+            </div>
+          </div>
+        </div>
+        <!-- CTA -->
+        <div class="wf-cta-area">
+          <div class="wf-cta-btn"><div class="wf-cta-inner"></div></div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>기획 의도</strong> — 면접관이 "이 사람이 어떤 문제를 봤는가"를 30초 안에 파악할 수 있어야 함. 수치로 문제를 구체화한 뒤 Before/After로 전환 방향을 보여줌.
+      </div>
+    </div>
+
+    <div class="connector">↓</div>
+
+    <!-- SCREEN B -->
+    <div class="screen-block" id="screen-b">
+      <div class="screen-header">
+        <span class="screen-id">Screen B</span>
+        <span class="screen-name">솔루션 개요</span>
+        <span class="screen-role">역량 #1 + #2 교차</span>
+      </div>
+      <div class="wf-canvas">
+        <!-- Thesis -->
+        <div class="wf-thesis-area">
+          <div class="wf-thesis-bar" style="width:85%"></div>
+          <div class="wf-thesis-bar" style="width:65%"></div>
+        </div>
+        <!-- ConceptCard -->
+        <div class="wf-row">
+          <div class="wf-label">ConceptCard · 3단계 흐름 (읽기 → 발견 → 실행)</div>
+          <div class="wf-concept">
+            <div class="wf-step">
+              <div class="wf-step-icon"></div>
+              <div class="wf-step-t"></div>
+              <div class="wf-step-s"></div>
+            </div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-step">
+              <div class="wf-step-icon"></div>
+              <div class="wf-step-t"></div>
+              <div class="wf-step-s"></div>
+            </div>
+            <div class="wf-arrow">→</div>
+            <div class="wf-step">
+              <div class="wf-step-icon"></div>
+              <div class="wf-step-t"></div>
+              <div class="wf-step-s"></div>
+            </div>
+          </div>
+        </div>
+        <!-- TagChip -->
+        <div class="wf-row">
+          <div class="wf-label">TagChip · 역량 레이블</div>
+          <div class="wf-tags">
+            <div class="wf-tag y" style="width:130px"></div>
+            <div class="wf-tag y" style="width:130px"></div>
+          </div>
+        </div>
+        <!-- CTA -->
+        <div class="wf-cta-area">
+          <div class="wf-cta-btn"><div class="wf-cta-inner"></div></div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>기획 의도</strong> — 역량 #1(의도 정확 실행)과 #2(행동 전환 설계)가 이 제품 안에서 교차하는 지점을 한 화면에서 보여줌. Thesis 문장이 화면의 닻(anchor).
+      </div>
+    </div>
+
+    <div class="connector">↓</div>
+
+    <!-- SCREEN C -->
+    <div class="screen-block" id="screen-c">
+      <div class="screen-header">
+        <span class="screen-id">Screen C</span>
+        <span class="screen-name">사용자 흐름</span>
+        <span class="screen-role">역량 #2 실증</span>
+      </div>
+      <div class="wf-canvas">
+        <!-- SceneStrip -->
+        <div class="wf-row">
+          <div class="wf-label">SceneStrip · Scene 1–4 가로 스크롤</div>
+          <div class="wf-scene-row">
+            <div class="wf-scene-item">
+              <div class="wf-phone-box"><div class="wf-phone-inner"></div></div>
+              <div class="wf-scene-n"></div>
+              <div class="wf-scene-t"></div>
+              <div class="wf-scene-time"></div>
+            </div>
+            <div class="wf-scene-item">
+              <div class="wf-phone-box"><div class="wf-phone-inner"></div></div>
+              <div class="wf-scene-n"></div>
+              <div class="wf-scene-t"></div>
+              <div class="wf-scene-time"></div>
+            </div>
+            <div class="wf-scene-item">
+              <div class="wf-phone-box"><div class="wf-phone-inner"></div></div>
+              <div class="wf-scene-n"></div>
+              <div class="wf-scene-t"></div>
+              <div class="wf-scene-time"></div>
+            </div>
+            <div class="wf-scene-item">
+              <div class="wf-phone-box"><div class="wf-phone-inner"></div></div>
+              <div class="wf-scene-n"></div>
+              <div class="wf-scene-t"></div>
+              <div class="wf-scene-time"></div>
+            </div>
+          </div>
+        </div>
+        <!-- 행동 전환 포인트 설명 -->
+        <div class="wf-row">
+          <div class="wf-label">행동 전환 포인트 설명</div>
+          <div class="ph ph-md w-80 mb-6"></div>
+          <div class="ph ph-sm w-65 mb-6"></div>
+          <div class="ph ph-sm w-50"></div>
+        </div>
+        <!-- CTA → 데모 -->
+        <div class="wf-cta-area">
+          <div class="wf-cta-btn"><div class="wf-cta-inner"></div></div>
+          <div style="text-align:center;margin-top:8px">
+            <span style="font-size:10px;color:var(--text-3);font-family:monospace">→ 07_interactive_demo.html</span>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>기획 의도</strong> — SceneStrip은 가로 스크롤. 각 씬에 PhoneFrame 목업 + 예상 소요 시간. 하단 CTA로 실제 인터랙티브 데모 진입. 행동이 "실제로 일어나는 구조"를 시각화.
+      </div>
+    </div>
+
+    <div class="connector">↓</div>
+
+    <!-- SCREEN D -->
+    <div class="screen-block" id="screen-d">
+      <div class="screen-header">
+        <span class="screen-id">Screen D</span>
+        <span class="screen-name">AI 품질 기준</span>
+        <span class="screen-role">역량 #1 실증</span>
+      </div>
+      <div class="wf-canvas">
+        <!-- SectionLabel + 설명 -->
+        <div class="wf-row">
+          <div class="wf-label">SectionLabel + 도입 설명</div>
+          <div class="ph ph-sm w-40 mb-6" style="background:rgba(254,229,0,0.15)"></div>
+          <div class="ph ph-md w-80 mb-6"></div>
+          <div class="ph ph-md w-65"></div>
+        </div>
+        <!-- ConditionTable -->
+        <div class="wf-row" style="padding:0">
+          <div class="wf-label" style="padding:12px 20px 0">ConditionTable · AI 노출 조건</div>
+          <table class="wf-table">
+            <thead>
+              <tr>
+                <th><div class="wf-table-th-bar"></div></th>
+                <th><div class="wf-table-th-bar" style="width:40%"></div></th>
+                <th><div class="wf-table-th-bar" style="width:35%"></div></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="wf-td-bar w-80" style="width:80%"></div></td>
+                <td><div class="wf-td-bar" style="width:60%"></div></td>
+                <td><div class="wf-badge"></div></td>
+              </tr>
+              <tr>
+                <td><div class="wf-td-bar w-80" style="width:80%"></div></td>
+                <td><div class="wf-td-bar" style="width:60%"></div></td>
+                <td><div class="wf-badge"></div></td>
+              </tr>
+              <tr>
+                <td><div class="wf-td-bar w-80" style="width:80%"></div></td>
+                <td><div class="wf-td-bar" style="width:60%"></div></td>
+                <td><div class="wf-badge na"></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 정답률 메트릭 -->
+        <div class="wf-row">
+          <div class="wf-label">MetricCard · 정답률 개선</div>
+          <div class="wf-kpi-row">
+            <div class="wf-kpi-box"><div class="wf-kpi-val"></div><div class="wf-kpi-label"></div></div>
+            <div class="wf-kpi-box"><div class="wf-kpi-val"></div><div class="wf-kpi-label"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>기획 의도</strong> — "AI가 어떤 조건에서 어떤 액션을 노출할 것인가"의 기준을 PM이 직접 정의했음을 보여줌. 에이닷 Bulk Test 설계 경험과 직결.
+      </div>
+    </div>
+
+    <div class="connector">↓</div>
+
+    <!-- SCREEN E -->
+    <div class="screen-block" id="screen-e">
+      <div class="screen-header">
+        <span class="screen-id">Screen E</span>
+        <span class="screen-name">KPI 설계</span>
+        <span class="screen-role">데이터 기반 증명</span>
+      </div>
+      <div class="wf-canvas">
+        <!-- KPI 카드 -->
+        <div class="wf-row">
+          <div class="wf-label">MetricCard × 2</div>
+          <div class="wf-kpi-row">
+            <div class="wf-kpi-box">
+              <div class="wf-kpi-val"></div>
+              <div class="wf-kpi-label"></div>
+              <div class="wf-kpi-def"></div>
+              <div class="wf-kpi-def" style="width:80%"></div>
+            </div>
+            <div class="wf-kpi-box">
+              <div class="wf-kpi-val"></div>
+              <div class="wf-kpi-label"></div>
+              <div class="wf-kpi-def"></div>
+              <div class="wf-kpi-def" style="width:80%"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Funnel -->
+        <div class="wf-row">
+          <div class="wf-label">FunnelBar · 홈 노출 → AI 탭 → 액션 완료</div>
+          <div class="wf-funnel">
+            <div class="wf-funnel-row">
+              <div class="wf-funnel-label"></div>
+              <div class="wf-funnel-wrap"><div class="wf-funnel-bar" style="width:100%"></div></div>
+              <div class="wf-funnel-num"></div>
+            </div>
+            <div class="wf-funnel-row">
+              <div class="wf-funnel-label"></div>
+              <div class="wf-funnel-wrap"><div class="wf-funnel-bar" style="width:7.5%"></div></div>
+              <div class="wf-funnel-num"></div>
+            </div>
+            <div class="wf-funnel-row">
+              <div class="wf-funnel-label"></div>
+              <div class="wf-funnel-wrap"><div class="wf-funnel-bar" style="width:2.25%"></div></div>
+              <div class="wf-funnel-num"></div>
+            </div>
+          </div>
+        </div>
+        <!-- 가설 노트 -->
+        <div class="wf-row" style="background:rgba(254,229,0,0.02)">
+          <div class="wf-label">Note · 가설 수치 명시</div>
+          <div class="ph ph-md w-full mb-6"></div>
+          <div class="ph ph-sm w-65"></div>
+        </div>
+      </div>
+      <div class="annotation">
+        <strong>기획 의도</strong> — "이게 잘 되고 있다는 걸 어떻게 측정할 것인가"를 먼저 정의했음을 보여줌. 가설 수치임을 투명하게 명시하는 것이 신뢰도를 높임.
+      </div>
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>
